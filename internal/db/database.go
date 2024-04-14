@@ -3,22 +3,47 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type Database struct{
-	db *sql.DB
+	db 			   *sql.DB
+	databaseExists bool
 }
 
-func NewDatabase(dbFile string) (*Database, error){
+func newDatabase(dbFile string) (*Database, error){
+	_, err := os.Stat(dbFile)
+	databaseExists := !os.IsNotExist(err)
+
 	db ,err := sql.Open("sqlite3", dbFile)
 	
 	if err != nil{
 		return nil, fmt.Errorf("error opening database %v", err)
 	}
 
-	return &Database{db: db}, nil
+	return &Database{
+		db: db,
+		databaseExists: databaseExists,
+		}, nil
+}
+
+func GetDatabase(dbFile string) (*Database, error) {
+	database, err := newDatabase(dbFile)
+	if err != nil{
+		return nil, fmt.Errorf("error creating or opening database: %v", err)
+	}
+
+	if !database.databaseExists {
+		err := database.Initizlize()
+		if err != nil {
+			return nil, fmt.Errorf("error initializing database: %v", err)
+		}
+	}
+
+	return database, nil
+
 }
 
 func (d *Database) Initizlize() error {
@@ -26,6 +51,7 @@ func (d *Database) Initizlize() error {
 		CREATE TABLE IF NOT EXISTS paths (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT,
+			score INTEGER
 			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`
@@ -48,7 +74,27 @@ func (d *Database) Close() error {
 func (d *Database) InsertPath(path string) (int64, error) {
 
 	insertPathSQL := `
-		INSERT INTO paths (path) VALUES (?)
+		INSERT INTO paths (path, score) VALUES (?, ?)
+	`
+	result, err := d.db.Exec(insertPathSQL, path, 0)
+
+	if err != nil{
+		return 0, fmt.Errorf("error on insertion")
+	}
+
+	userID, err := result.LastInsertId()
+
+	if err != nil {
+		return 0, fmt.Errorf("error while getting last inserted id: %v", err)
+	}
+
+	return userID, nil
+}
+
+func (d *Database) GetPath(path string) (int64, error) {
+
+	insertPathSQL := `
+		SELECT path FROM paths
 	`
 	result, err := d.db.Exec(insertPathSQL, path)
 
@@ -64,3 +110,4 @@ func (d *Database) InsertPath(path string) (int64, error) {
 
 	return userID, nil
 }
+

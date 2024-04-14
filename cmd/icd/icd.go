@@ -5,7 +5,8 @@ package icd
 
 import (
 	"fmt"
-	"os"
+	"intellipath/internal/constants"
+	"intellipath/internal/db"
 
 	"github.com/spf13/cobra"
 )
@@ -19,12 +20,23 @@ var IcdCmd = &cobra.Command{
 }
 
 func RunIcd(cmd *cobra.Command, args []string) {
-	//path = users input path
+	UserPath := args[0]
+
 	//Start goroutine to fetch from DB
 	//Start goroutine named: DB:
 	//                      - Update DB if path exists/scoring
-	fmt.Println("icd calledaaa")
-	os.Stdout.WriteString("~/")
+	fmt.Println("icd called")
+
+	database, err := db.GetDatabase(constants.DBname)
+
+	database.GetPath(UserPath)
+	if err != nil{
+		fmt.Printf("An error has occured!")
+	}
+
+	database.InsertPath(UserPath)
+
+	// os.Stdout.WriteString("~/")
 }
 
 
