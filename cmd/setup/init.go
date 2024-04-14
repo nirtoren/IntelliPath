@@ -5,6 +5,8 @@ package setup
 
 import (
 	"fmt"
+	"intellipath/internal/db"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -21,6 +23,37 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("init called")
+
+		dbFile := "mydb.db"
+
+		database, err := db.NewDatabase(dbFile)
+
+		if err != nil {
+			fmt.Printf("Error initializing database: %v\n", err)
+			os.Exit(1)
+		}
+
+		defer database.Close()
+
+
+		err = database.Initizlize()
+		if err != nil {
+			fmt.Printf("Error initializing database: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Println("Database initialization complete.")
+
+		var userID int64
+		userID, err = database.InsertPath("/home/desktop")
+		if err != nil {
+			fmt.Printf("Error on insertion to database: %v\n", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("insertion completed. %d\n", userID)
+
+
 	},
 }
 
