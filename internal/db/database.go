@@ -50,7 +50,7 @@ func (d *Database) Initizlize() error {
 	schemaSQL := `
 		CREATE TABLE IF NOT EXISTS paths (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
-			path TEXT,
+			path TEXT NOT NULL UNIQUE,
 			score INTEGER
 			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
@@ -91,23 +91,31 @@ func (d *Database) InsertPath(path string) (int64, error) {
 	return userID, nil
 }
 
-func (d *Database) GetPath(path string) (int64, error) {
+func (d *Database) GetAllPaths() ([]string, error) {
 
-	insertPathSQL := `
+	var paths []string
+
+	getAllPathsSQL := `
 		SELECT path FROM paths
 	`
-	result, err := d.db.Exec(insertPathSQL, path)
-
-	if err != nil{
-		return 0, fmt.Errorf("error on insertion")
-	}
-
-	userID, err := result.LastInsertId()
-
+	rows, err := d.db.Query(getAllPathsSQL)
 	if err != nil {
-		return 0, fmt.Errorf("error while getting last inserted id: %v", err)
+		return nil, fmt.Errorf("error executing query: %v", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var path string
+		if err := rows.Scan(&path); err != nil {
+			return nil, fmt.Errorf("error scanning row %v", err)
+		}
+		paths = append(paths, path)
+		
 	}
 
-	return userID, nil
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over rows: %v", err)
+	}
+	return paths, nil
 }
 

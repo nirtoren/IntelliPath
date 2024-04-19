@@ -9,6 +9,7 @@ import (
 	"intellipath/internal/db"
 
 	"github.com/spf13/cobra"
+	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
 // icdCmd represents the icd command
@@ -22,19 +23,26 @@ var IcdCmd = &cobra.Command{
 func RunIcd(cmd *cobra.Command, args []string) {
 	UserPath := args[0]
 
-	//Start goroutine to fetch from DB
-	//Start goroutine named: DB:
-	//                      - Update DB if path exists/scoring
 	fmt.Println("icd called")
 
 	database, err := db.GetDatabase(constants.DBname)
-
-	database.GetPath(UserPath)
 	if err != nil{
 		fmt.Printf("An error has occured!")
 	}
 
-	database.InsertPath(UserPath)
+	
+
+	var paths []string
+	paths, err = database.GetAllPaths()
+	if err != nil{
+		fmt.Printf("An error has occured!")
+	}
+
+	// fmt.Println(fuzzy.RankFind(UserPath, paths))
+	fmt.Println(fuzzy.FindNormalized(UserPath, paths))
+	// fmt.Println(paths)
+
+	// database.InsertPath(UserPath)
 
 	// os.Stdout.WriteString("~/")
 }
