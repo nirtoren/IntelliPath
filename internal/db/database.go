@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 
@@ -11,6 +12,11 @@ import (
 type Database struct{
 	db 			   *sql.DB
 	databaseExists bool
+}
+
+type PathRecord struct{
+	path string
+	score int8
 }
 
 func newDatabase(dbFile string) (*Database, error){
@@ -27,6 +33,14 @@ func newDatabase(dbFile string) (*Database, error){
 		db: db,
 		databaseExists: databaseExists,
 		}, nil
+}
+
+func NewRecord(path string, score int8) (*PathRecord, error){
+	if path == ""{
+		return nil, errors.New("path can not be NULL")
+	}
+	return &PathRecord{path: path,
+						score: score}, nil
 }
 
 func GetDatabase(dbFile string) (*Database, error) {
@@ -71,12 +85,12 @@ func (d *Database) Close() error {
 	return nil
 }
 
-func (d *Database) InsertPath(path string) (int64, error) {
+func (d *Database) InsertPath(pathRec *PathRecord) (int64, error) {
 
 	insertPathSQL := `
 		INSERT INTO paths (path, score) VALUES (?, ?)
 	`
-	result, err := d.db.Exec(insertPathSQL, path, 0)
+	result, err := d.db.Exec(insertPathSQL, pathRec.path, pathRec.score)
 
 	if err != nil{
 		return 0, fmt.Errorf("error on insertion")

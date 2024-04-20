@@ -34,7 +34,8 @@ to quickly create a Cobra application.`,
 
 		// Testing insertion on initialization of the database
 		var userID int64
-		userID, err = database.InsertPath("/home/desktop")
+		rec, _ := db.NewRecord("/home/desktop", 0)
+		userID, err = database.InsertPath(rec)
 		if err != nil {
 			fmt.Printf("Error on insertion to database: %v\n", err)
 			os.Exit(1)

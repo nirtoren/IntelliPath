@@ -7,9 +7,10 @@ import (
 	"fmt"
 	"intellipath/internal/constants"
 	"intellipath/internal/db"
+	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/lithammer/fuzzysearch/fuzzy"
+	"github.com/spf13/cobra"
 )
 
 // icdCmd represents the icd command
@@ -25,12 +26,28 @@ func RunIcd(cmd *cobra.Command, args []string) {
 
 	fmt.Println("icd called")
 
+	// Stage 1: get the db
 	database, err := db.GetDatabase(constants.DBname)
 	if err != nil{
 		fmt.Printf("An error has occured!")
 	}
 
-	
+	// Stage 2: try to 'cd' into users input
+	err = os.Chdir(UserPath)
+	if err != nil {
+		// Light flow
+		// Check absolute path in db
+		// if in DB -> Score up & Act
+	} else {
+		// Heavy flow
+		// Check in DB + fuzzy + levinshtein
+		// if exists -> get result -> try cd -> delete path if fails / Score up & Act.
+		// if does not exists -> fail the process ( As 'cd' would fail )
+	}
+
+	// Stage 3: if err == nil than check path in db + fuzzy ...
+	// If err != nil, meaning the path exists relativly to where the user is on,
+	// Check db, if exists -> Score up and act, if doesnt exist, Save!
 
 	var paths []string
 	paths, err = database.GetAllPaths()
