@@ -10,7 +10,7 @@ import (
 
 type MinFunc func([]int) []int
 
-func FuzzyFind(path string, optionalResults []db.PathRecord) (string, error) {
+func FuzzyFind(path string, optionalResults []string) (string, error) {
 
 	var foundPaths []string = fuzzy.Find(path, optionalResults) //Should get a list of optional paths 
 	if len(foundPaths) == 0 {
@@ -37,6 +37,8 @@ func findMinLevenshteinDistance(userInput string, foundPaths []string, minFuncti
 	}
 
 	minimalLevenshtainDistance := minFunction(distances)
+
+	return []
 
 }
 

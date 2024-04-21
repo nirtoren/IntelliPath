@@ -133,3 +133,23 @@ func (d *Database) GetAllPaths() ([]string, error) {
 	return paths, nil
 }
 
+func (d *Database) PathSearch(pathToSearch string) (string, error) {
+
+	var path string
+
+	searchPathsSQL := `
+		SELECT * FROM paths WHERE path = ?
+		`
+	err := d.db.QueryRow(searchPathsSQL, pathToSearch).Scan(&path)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", err
+		} else {
+			return "", errors.New("an error occured during search for path")
+		}
+		
+	} else {
+		return path, nil
+	}
+}
+

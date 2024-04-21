@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"intellipath/internal/constants"
 	"intellipath/internal/db"
+	"intellipath/internal/flows"
 	"os"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -36,8 +37,9 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	err = os.Chdir(UserPath)
 	if err != nil {
 		// Light flow
-		// Check absolute path in db
-		// if in DB -> Score up & Act
+		lightFlow := flow.InitLightFlow(database, UserPath)
+		lightFlow.Act()
+
 	} else {
 		// Heavy flow
 		// Check in DB + fuzzy + levinshtein
