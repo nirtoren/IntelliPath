@@ -10,10 +10,10 @@ import (
 type Heavy struct{
 	pathsdb *db.Database
 	score algo.Score
-	relativePath string
+	basePath string
 }
 
-func InitHeavyFlow(pathDB *db.Database, relativePath string) *Heavy{
+func InitHeavyFlow(pathDB *db.Database, basePath string) *Heavy{
 	if pathDB == nil{
 		fmt.Errorf("could not initialize Heavy flow")
 		return nil
@@ -22,19 +22,19 @@ func InitHeavyFlow(pathDB *db.Database, relativePath string) *Heavy{
 	return &Heavy{
 		pathsdb: pathDB,
 		score: algo.Score{},
-		relativePath: relativePath,
+		basePath: basePath,
 	}
 }
 
-func (h *Heavy) Act() error{
+func (h *Heavy) Act() (string, error){
 	// Check in DB + fuzzy + levinshtein
 	// if exists -> get result -> try cd -> delete path if fails / Score up & Act.
 	// if does not exists -> fail the process As 'cd' would fail
 	paths, err := h.pathsdb.GetAllPaths()
 	if err != nil {
-		return errors.New("could not get paths from DB")
+		return "", errors.New("could not get paths from DB")
 	}
-	fuzzyResPaths, err := algo.FuzzyFind(h.relativePath, paths) //fuzzy + levinshtein getting a PathDistRecord struct
+	fuzzyResPaths, err := algo.FuzzyFind(h.basePath, paths) //fuzzy + levinshtein getting a PathDistRecord struct
 	fmt.Println(fuzzyResPaths, err)
 	// records, err := l.pathsdb.GetRecordsByName(fuzzyResPaths)
 	// Score filtering
@@ -42,6 +42,6 @@ func (h *Heavy) Act() error{
 	// 	// get the path with the heighest score
 	// }
 
-	return nil
+	return "", nil
 }
 

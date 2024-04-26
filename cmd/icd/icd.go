@@ -23,8 +23,9 @@ var IcdCmd = &cobra.Command{
 }
 
 func RunIcd(cmd *cobra.Command, args []string) {
+	var outPath string
 	UserPath := args[0]
-
+	
 	fmt.Println("icd called")
 
 	// Stage 1: get the db
@@ -33,30 +34,22 @@ func RunIcd(cmd *cobra.Command, args []string) {
 		fmt.Printf("An error has occured!")
 	}
 
-	// Stage 2: try to 'cd' into users input
+	// Stage 2: Check if users input path exists
 	absolutePath, err := filepath.Abs(UserPath)
-	if _, err = os.Stat(absolutePath); os.IsNotExist(err) {
-		heavyFlow := flow.InitHeavyFlow(database, UserPath)
-		heavyFlow.Act()
-	} else {
-		lightFlow := flow.InitLightFlow(database, UserPath)
-		lightFlow.Act()
+	if err != nil {
+		fmt.Printf("An error has occured!")
 	}
 
-	// err = os.Chdir(UserPath)
-	// if err == nil {
-	// 	// Light flow
-	// 	lightFlow := flow.InitLightFlow(database, UserPath)
-	// 	lightFlow.Act()
+	if _, err = os.Stat(absolutePath); os.IsNotExist(err) {
+		heavyFlow := flow.InitHeavyFlow(database, filepath.Base(UserPath))
+		outPath, err = heavyFlow.Act()
+	} else {
+		lightFlow := flow.InitLightFlow(database, absolutePath)
+		outPath, err = lightFlow.Act()
+	}
 
-	// } else {
-	// 	// Heavy flow
-	// 	heavyFlow := flow.InitHeavyFlow(database, UserPath)
-	// 	heavyFlow.Act()
-	// }
-
-	// os.Stdout.WriteString("~/")
-
+	fmt.Println(outPath)
+	os.Stdout.WriteString(outPath)
 }
 
 
