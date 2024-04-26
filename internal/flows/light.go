@@ -1,7 +1,6 @@
 package flow
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"intellipath/internal/algorithms"
@@ -44,7 +43,7 @@ func (l *Light) Act() error{
 	path, score, err := l.pathsdb.PathSearch(l.absolutePath)
 	if err != nil {
 		return errors.New("could not get paths from DB")
-	} else if path == "" && err == sql.ErrNoRows { // In case path does not exists in DB
+	} else if path == "" && err == nil { // In case path does not exists in DB
 		record, err := db.NewRecord(l.absolutePath, 0)
 		if err != nil {
 			return err
@@ -52,8 +51,10 @@ func (l *Light) Act() error{
 		_ ,err = l.pathsdb.InsertPath(record)
 		if err != nil {
 			return err
+		} else {
+			os.Stdout.WriteString(l.absolutePath)
 		}
-	} else if path != "" && err == nil{ // In case path DOES exists in DB
+	} else{ // In case path DOES exists in DB
 		l.pathsdb.UpdateScore(l.absolutePath, score)
 		os.Stdout.WriteString(l.absolutePath)
 	}

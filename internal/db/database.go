@@ -138,17 +138,21 @@ func (d *Database) PathSearch(pathToSearch string) (string, int8, error) {
 	var score int8
 
 	searchPathsSQL := "SELECT path,score FROM paths WHERE path = ?"
-	_, err := d.db.Query(searchPathsSQL, pathToSearch)
+	rows, err := d.db.Query(searchPathsSQL, pathToSearch)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return "", 0, err
-		} else {
-			return "", 0, errors.New("an error occured during search for path")
-		}
+		fmt.Println(err)
 		
-	} else {
-		return path, score, nil
 	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		if err := rows.Scan(&path, &score); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	return path, score, err
 }
 
 
