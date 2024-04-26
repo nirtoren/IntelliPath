@@ -2,57 +2,65 @@ package algo
 
 import (
 	"errors"
-	"math"
-	"intellipath/internal/db"
+	"sort"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
-type MinFunc func([]int) []int
+type MinFunc func([]PathDistRecord) []PathDistRecord
 
-func FuzzyFind(path string, optionalResults []string) (string, error) {
+type PathDistRecord struct{
+	Path string
+	LevDistance int
+}
 
-	var foundPaths []string = fuzzy.Find(path, optionalResults) //Should get a list of optional paths 
+func FuzzyFind(path string, dbPaths []string) ([]PathDistRecord, error) {
+
+	var foundPaths []string = fuzzy.Find(path, dbPaths) //Should get a list of optional paths 
+	// var nullPathDistRec []PathDistRecord
 	if len(foundPaths) == 0 {
-		return "", errors.New("could not find suitable path.")
+
+		return []PathDistRecord{}, errors.New("could not find suitable path") // In case could not find any match
+
 	} else if len(foundPaths) == 1{
-		return foundPaths[0], nil
-	} else {
-		levenshteinPaths := findMinLevenshteinDistance(path, foundPaths, findTwoMin) // Should get a list of two elements for future score filtering
-		heighetScored := 0 // Should filter the "levenshteinPaths" by their score.
-	}
+		singlePath := PathDistRecord{Path: foundPaths[0], LevDistance: 0}
+		return []PathDistRecord{singlePath}, nil // In case only one match was found, no need to procced to Levenshtein OR Score filters
 	
-	return "", nil
+		} else { // In case more then one match was found
+	
+			levenshteinPaths := findMinLevenshteinDistance(path, foundPaths, findTwoMin) // Should get a list of two elements for future score filtering
+			return levenshteinPaths, nil
+	}
 }
 
-func findMinLevenshteinDistance(userInput string, foundPaths []string, minFunction MinFunc) {
-	// [1,3,5,2,0]
-	// Should be {path , distance}
-	// Send to minFunction({path, distance})
-	// return the objects consisting the path and its distance
-	var distances []int
-	for _, path := range foundPaths {
+func findMinLevenshteinDistance(userInput string, foundPaths []string, minFunction MinFunc) []PathDistRecord {
+	var pathDist []PathDistRecord
+
+	for _, path := range foundPaths{
 		distance := fuzzy.LevenshteinDistance(userInput, path)
-		distances = append(distances, distance)
+		pathDist = append(pathDist, PathDistRecord{Path: path, LevDistance: distance})
 	}
 
-	minimalLevenshtainDistance := minFunction(distances)
+	minimalLevenshtainDistance := minFunction(pathDist)
 
-	return []
+	return minimalLevenshtainDistance
 
 }
 
-func findTwoMin(nums []int) []int {
-	min1, min2 := math.MaxInt8, math.MaxInt8
+func findTwoMin(records []PathDistRecord) []PathDistRecord {
+	
+	var sortedRecs []PathDistRecord
 
-	for _, num := range nums {
-		if num < min1 {
-			min2 = min1
-			min1 = num
-		} else if num < min2 {
-			min2 = num
+	sort.Slice(records, func (i, j int) bool {
+		return records[i].LevDistance < records[j].LevDistance
+	})
+
+	if len(records) > 0 {
+		sortedRecs = append(sortedRecs,records[0])
+		if len(records) > 1 {
+			sortedRecs = append(sortedRecs, records[1])
 		}
 	}
 
-	return []int{min1, min2}
+	return sortedRecs
 }

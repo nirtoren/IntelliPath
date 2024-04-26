@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -63,10 +64,8 @@ func GetDatabase(dbFile string) (*Database, error) {
 func (d *Database) Initizlize() error {
 	schemaSQL := `
 		CREATE TABLE IF NOT EXISTS paths (
-			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL UNIQUE,
 			score INTEGER
-			timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)
 	`
 	_, err := d.db.Exec(schemaSQL)
@@ -133,23 +132,66 @@ func (d *Database) GetAllPaths() ([]string, error) {
 	return paths, nil
 }
 
-func (d *Database) PathSearch(pathToSearch string) (string, error) {
+func (d *Database) PathSearch(pathToSearch string) (string, int8, error) {
 
 	var path string
+	var score int8
 
-	searchPathsSQL := `
-		SELECT * FROM paths WHERE path = ?
-		`
-	err := d.db.QueryRow(searchPathsSQL, pathToSearch).Scan(&path)
+	searchPathsSQL := "SELECT path,score FROM paths WHERE path = ?"
+	_, err := d.db.Query(searchPathsSQL, pathToSearch)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return "", err
+			return "", 0, err
 		} else {
-			return "", errors.New("an error occured during search for path")
+			return "", 0, errors.New("an error occured during search for path")
 		}
 		
 	} else {
-		return path, nil
+		return path, score, nil
 	}
 }
 
+
+func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) (bool, error) {
+
+	updateScoresSQL := `UPDATE paths SET score = ? WHERE path = ?`
+	newScore := oldScore + 1
+	_, err := d.db.Exec(updateScoresSQL, newScore, pathToUpdate)
+	if err != nil {
+		return false, errors.New("failed updating the score of a the path")
+	}
+	return true, nil
+}
+
+func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error) {
+	selectQuery := "SELECT * FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ")+ ")"
+	
+	args := make([]interface{}, len(optionalPaths))
+	for i, path := range optionalPaths {
+		args[i] = path
+	}
+
+	rows, err := d.db.Query(selectQuery, args...)
+	if err != nil {
+		return []PathRecord{}, errors.New("failed to query for paths")
+	}
+
+	defer rows.Close()
+
+	var records []PathRecord
+
+	for rows.Next() {
+		var path string
+		var score int8
+		err := rows.Scan(&path, &score)
+		if err != nil {
+			return []PathRecord{}, errors.New("failed to query for paths") 
+		}
+		records = append(records, PathRecord{path: path, score: score})
+		
+		if err := rows.Err(); err != nil {
+			return []PathRecord{}, err
+		}
+	}
+	return records, nil
+}

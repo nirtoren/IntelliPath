@@ -7,7 +7,7 @@ import (
 	"intellipath/internal/algorithms"
 	"intellipath/internal/db"
 	"path/filepath"
-	"sort"
+	"os"
 )
 
 type Light struct{
@@ -40,7 +40,8 @@ func InitLightFlow(pathDB *db.Database, relativePath string) *Light{
 func (l *Light) Act() error{
 	// Check absolute path in db
 	// if in DB -> Score up & Act
-	path, err := l.pathsdb.PathSearch(l.absolutePath)
+
+	path, score, err := l.pathsdb.PathSearch(l.absolutePath)
 	if err != nil {
 		return errors.New("could not get paths from DB")
 	} else if path == "" && err == sql.ErrNoRows { // In case path does not exists in DB
@@ -53,16 +54,8 @@ func (l *Light) Act() error{
 			return err
 		}
 	} else if path != "" && err == nil{ // In case path DOES exists in DB
-		// get the db row
-		// update the score
-		// return the absolute path as stdout
-		
+		l.pathsdb.UpdateScore(l.absolutePath, score)
+		os.Stdout.WriteString(l.absolutePath)
 	}
 	return nil
 }
-
-func (l *Light) isExistInDB() (bool, error){
-	
-	return false, errors.New("could not get paths from DB")
-}
-

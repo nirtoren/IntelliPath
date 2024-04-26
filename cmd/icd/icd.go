@@ -9,8 +9,8 @@ import (
 	"intellipath/internal/db"
 	"intellipath/internal/flows"
 	"os"
+	"path/filepath"
 
-	"github.com/lithammer/fuzzysearch/fuzzy"
 	"github.com/spf13/cobra"
 )
 
@@ -34,36 +34,29 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	}
 
 	// Stage 2: try to 'cd' into users input
-	err = os.Chdir(UserPath)
-	if err != nil {
-		// Light flow
+	absolutePath, err := filepath.Abs(UserPath)
+	if _, err = os.Stat(absolutePath); os.IsNotExist(err) {
+		heavyFlow := flow.InitHeavyFlow(database, UserPath)
+		heavyFlow.Act()
+	} else {
 		lightFlow := flow.InitLightFlow(database, UserPath)
 		lightFlow.Act()
-
-	} else {
-		// Heavy flow
-		// Check in DB + fuzzy + levinshtein
-		// if exists -> get result -> try cd -> delete path if fails / Score up & Act.
-		// if does not exists -> fail the process ( As 'cd' would fail )
 	}
 
-	// Stage 3: if err == nil than check path in db + fuzzy ...
-	// If err != nil, meaning the path exists relativly to where the user is on,
-	// Check db, if exists -> Score up and act, if doesnt exist, Save!
+	// err = os.Chdir(UserPath)
+	// if err == nil {
+	// 	// Light flow
+	// 	lightFlow := flow.InitLightFlow(database, UserPath)
+	// 	lightFlow.Act()
 
-	var paths []string
-	paths, err = database.GetAllPaths()
-	if err != nil{
-		fmt.Printf("An error has occured!")
-	}
-
-	// fmt.Println(fuzzy.RankFind(UserPath, paths))
-	fmt.Println(fuzzy.FindNormalized(UserPath, paths))
-	// fmt.Println(paths)
-
-	// database.InsertPath(UserPath)
+	// } else {
+	// 	// Heavy flow
+	// 	heavyFlow := flow.InitHeavyFlow(database, UserPath)
+	// 	heavyFlow.Act()
+	// }
 
 	// os.Stdout.WriteString("~/")
+
 }
 
 
