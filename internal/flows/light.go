@@ -27,24 +27,30 @@ func InitLightFlow(pathDB *db.Database, absolutePath string) *Light{
 	}
 }
 
-func (l *Light) Act() (string, error){
-	path, score, err := l.pathsdb.PathSearch(l.absolutePath)
+func (light *Light) Act() (string, error){ // This should later on return a record
+	var outPath string
+
+	path, score, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
 	if err != nil {
-		return "", errors.New("could not get paths from DB")
-	} else if path == "" && err == nil { // In case path does not exists in DB
-		record, err := db.NewRecord(l.absolutePath, 0)
-		if err != nil {
-			return "", err
-		}
-		_ ,err = l.pathsdb.InsertPath(record)
-		if err != nil {
-			return "", err
-		} else {
-			os.Stdout.WriteString(l.absolutePath)
-		}
-	} else{ // In case path DOES exists in DB
-		l.pathsdb.UpdateScore(l.absolutePath, score)
-		os.Stdout.WriteString(l.absolutePath)
+		return "", err
 	}
-	return l.absolutePath, nil
+	switch path {
+	case "": // In case no record was found
+		record, err := db.NewRecord(light.absolutePath, 0)
+		if err != nil {
+			return "", err
+		}
+
+		_ ,err = light.pathsdb.InsertPath(record)
+		if err == nil {
+			outPath = light.absolutePath
+		}
+	case light.absolutePath: // In case a matching record was found
+		err = light.pathsdb.UpdateScore(light.absolutePath, score) // This should later on return an updated record 
+		if err == nil {
+			outPath = light.absolutePath
+		}
+	}
+	
+	return outPath, nil
 }

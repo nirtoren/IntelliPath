@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/main.go",
-            "args": ["icd", "/home/nirt/Desktop/IntelliPath/internal/algorithms"],
+            "args": ["icd", "../"],
             "env": {},
             "showLog": true
         }

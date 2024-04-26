@@ -156,15 +156,15 @@ func (d *Database) PathSearch(pathToSearch string) (string, int8, error) {
 }
 
 
-func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) (bool, error) {
+func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) error {
 
 	updateScoresSQL := `UPDATE paths SET score = ? WHERE path = ?`
 	newScore := oldScore + 1
 	_, err := d.db.Exec(updateScoresSQL, newScore, pathToUpdate)
 	if err != nil {
-		return false, errors.New("failed updating the score of a the path")
+		return errors.New("failed updating the score of a the path")
 	}
-	return true, nil
+	return nil
 }
 
 func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error) {
