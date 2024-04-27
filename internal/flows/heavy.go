@@ -48,7 +48,7 @@ func (h *Heavy) Act() (string, error){
 	}
 	
 	// filter by score function
-	outPath, err := h.filterByScore(records)
+	outPath, score, err := h.filterByScore(records)
 	if err != nil {
 		return "", errors.New("failed to filter records by score")
 	}
@@ -57,21 +57,23 @@ func (h *Heavy) Act() (string, error){
 	if !pathFormatter.IsExists(outPath) {
 		h.pathsdb.DeletePath(outPath)
 		panic("Path does not exists")
+	} else {
+		_ = h.pathsdb.UpdateScore(outPath, score)
+		return outPath, nil
 	}
-	return outPath, nil
 }
 
-func (h *Heavy) filterByScore(records []db.PathRecord) (string, error) {
+func (h *Heavy) filterByScore(records []db.PathRecord) (string, int8, error) {
 
 	if len(records) < 1 {
-		return "", errors.New("could not find any paths")
+		return "", 0, errors.New("could not find any paths")
 	} else if len(records) == 1{
-		return records[0].Path, nil
+		return records[0].Path, records[0].Score, nil
 	} else {
 		if records[0].Score > records[1].Score {
-			return records[0].Path, nil
+			return records[0].Path, records[0].Score, nil
 		} else {
-			return records[1].Path, nil
+			return records[1].Path, records[0].Score, nil
 		}
 	}
 }

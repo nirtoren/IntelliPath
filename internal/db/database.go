@@ -166,6 +166,18 @@ func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) error {
 	return nil
 }
 
+
+func (d *Database) DeletePath(pathToDelete string) error {
+
+	deleteRecordSQL := `DELETE from paths WHERE path = ?`
+	_, err := d.db.Exec(deleteRecordSQL, pathToDelete)
+	if err != nil {
+		return errors.New("failed updating the score of a the path")
+	}
+	return nil
+}
+
+
 func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error) {
 	selectQuery := "SELECT * FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ")+ ")"
 	
