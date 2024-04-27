@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -16,8 +15,8 @@ type Database struct{
 }
 
 type PathRecord struct{
-	path string
-	score int8
+	Path string
+	Score int8
 }
 
 func newDatabase(dbFile string) (*Database, error){
@@ -40,8 +39,8 @@ func NewRecord(path string, score int8) (*PathRecord, error){
 	if path == ""{
 		return nil, errors.New("path can not be NULL")
 	}
-	return &PathRecord{path: path,
-						score: score}, nil
+	return &PathRecord{Path: path,
+						Score: score}, nil
 }
 
 func GetDatabase(dbFile string) (*Database, error) {
@@ -89,7 +88,7 @@ func (d *Database) InsertPath(pathRec *PathRecord) (int64, error) {
 	insertPathSQL := `
 		INSERT INTO paths (path, score) VALUES (?, ?)
 	`
-	result, err := d.db.Exec(insertPathSQL, pathRec.path, pathRec.score)
+	result, err := d.db.Exec(insertPathSQL, pathRec.Path, pathRec.Score)
 
 	if err != nil{
 		return 0, fmt.Errorf("error on insertion")
@@ -191,7 +190,7 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error
 		if err != nil {
 			return []PathRecord{}, errors.New("failed to query for paths") 
 		}
-		records = append(records, PathRecord{path: path, score: score})
+		records = append(records, PathRecord{Path: path, Score: score})
 		
 		if err := rows.Err(); err != nil {
 			return []PathRecord{}, err

@@ -1,16 +1,12 @@
 package flow
 
 import (
-	"errors"
 	"fmt"
-	"intellipath/internal/algorithms"
 	"intellipath/internal/db"
-	"os"
 )
 
 type Light struct{
 	pathsdb *db.Database
-	score algo.Score
 	absolutePath string
 }
 
@@ -22,7 +18,6 @@ func InitLightFlow(pathDB *db.Database, absolutePath string) *Light{
 
 	return &Light{
 		pathsdb: pathDB,
-		score: algo.Score{},
 		absolutePath: absolutePath,
 	}
 }
