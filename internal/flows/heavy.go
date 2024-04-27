@@ -2,9 +2,9 @@ package flow
 
 import (
 	"errors"
-	"fmt"
 	"intellipath/internal/algorithms"
 	"intellipath/internal/db"
+	"intellipath/internal/interfaces"
 )
 
 type Heavy struct{
@@ -14,8 +14,7 @@ type Heavy struct{
 
 func InitHeavyFlow(pathDB *db.Database, basePath string) *Heavy{
 	if pathDB == nil{
-		fmt.Errorf("could not initialize Heavy flow")
-		return nil
+		panic("could not initialize Heavy flow due to DB issue")
 	}
 
 	return &Heavy{
@@ -26,8 +25,7 @@ func InitHeavyFlow(pathDB *db.Database, basePath string) *Heavy{
 
 func (h *Heavy) Act() (string, error){
 	// Check in DB + fuzzy + levinshtein
-	var outPath string
-	var fuzzyPaths []string
+	pathFormatter := interfaces.NewPathFormatter()
 
 	paths, err := h.pathsdb.GetAllPaths()
 	if err != nil {
@@ -38,6 +36,8 @@ func (h *Heavy) Act() (string, error){
 	if err != nil {
 		return "", errors.New("could not get paths from DB")
 	}
+
+	var fuzzyPaths []string
 	for _, pathRes := range fuzzyResPaths {
 		fuzzyPaths = append(fuzzyPaths, pathRes.Path)
 	}
@@ -48,19 +48,30 @@ func (h *Heavy) Act() (string, error){
 	}
 	
 	// filter by score function
-
-	if len(records) < 1 {
-		outPath = ""
-	} else if len(records) == 1{
-		outPath = records[0].Path
-	} else {
-		if records[0].Score > records[1].Score {
-			outPath = records[0].Path
-		} else {
-			outPath = records[1].Path
-		}
+	outPath, err := h.filterByScore(records)
+	if err != nil {
+		return "", errors.New("failed to filter records by score")
 	}
 
+	// Check if found path exists
+	if !pathFormatter.IsExists(outPath) {
+		h.pathsdb.DeletePath(outPath)
+		panic("Path does not exists")
+	}
 	return outPath, nil
 }
 
+func (h *Heavy) filterByScore(records []db.PathRecord) (string, error) {
+
+	if len(records) < 1 {
+		return "", errors.New("could not find any paths")
+	} else if len(records) == 1{
+		return records[0].Path, nil
+	} else {
+		if records[0].Score > records[1].Score {
+			return records[0].Path, nil
+		} else {
+			return records[1].Path, nil
+		}
+	}
+}

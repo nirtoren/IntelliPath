@@ -1,7 +1,6 @@
 package flow
 
 import (
-	"fmt"
 	"intellipath/internal/db"
 )
 
@@ -12,8 +11,7 @@ type Light struct{
 
 func InitLightFlow(pathDB *db.Database, absolutePath string) *Light{
 	if pathDB == nil{
-		fmt.Errorf("could not initialize Light flow")
-		return nil
+		panic("could not initialize Light flow due to DB issue")
 	}
 
 	return &Light{
@@ -29,22 +27,25 @@ func (light *Light) Act() (string, error){ // This should later on return a reco
 	if err != nil {
 		return "", err
 	}
+
 	switch path {
 	case "": // In case no record was found
 		record, err := db.NewRecord(light.absolutePath, 0)
 		if err != nil {
 			return "", err
 		}
+		
+		if _ ,err = light.pathsdb.InsertPath(record); err != nil {
+			return "", err
+		}
+		outPath = light.absolutePath
 
-		_ ,err = light.pathsdb.InsertPath(record)
-		if err == nil {
-			outPath = light.absolutePath
-		}
 	case light.absolutePath: // In case a matching record was found
-		err = light.pathsdb.UpdateScore(light.absolutePath, score) // This should later on return an updated record 
-		if err == nil {
-			outPath = light.absolutePath
+		if err := light.pathsdb.UpdateScore(light.absolutePath, score); err != nil {
+			return "", err
 		}
+		outPath = light.absolutePath
+
 	}
 	
 	return outPath, nil

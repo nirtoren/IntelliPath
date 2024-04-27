@@ -11,11 +11,17 @@ type Formatter interface {
 	IsExists(string) bool
 }
 
-func ToBase(path string) string {
+type PathFormatter struct {}
+
+func NewPathFormatter() *PathFormatter {
+	return &PathFormatter{}
+}
+
+func (f *PathFormatter) ToBase(path string) string {
 	return filepath.Base(path)
 }
 
-func ToAbs(path string) string {
+func (f *PathFormatter) ToAbs(path string) string {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		panic("Could not convert to absolute path")
@@ -24,7 +30,7 @@ func ToAbs(path string) string {
 	return absPath
 }
 
-func IsExists(path string) bool {
+func (f *PathFormatter) IsExists(path string) bool {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return false
 	}
