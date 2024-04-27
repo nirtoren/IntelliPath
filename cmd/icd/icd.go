@@ -26,8 +26,6 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
 	UserPath := args[0]
 	
-	fmt.Println("icd called")
-
 	// Stage 1: get the db
 	database, err := db.GetDatabase(constants.DBname)
 	if err != nil{
@@ -35,6 +33,7 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	}
 
 	// Stage 2: Check if users input path exists
+	// absolutePath := interfaces.Formatter.ToAbs(UserPath)
 	absolutePath, err := filepath.Abs(UserPath)
 	if err != nil {
 		fmt.Printf("An error has occured!")
@@ -48,7 +47,6 @@ func RunIcd(cmd *cobra.Command, args []string) {
 		outPath, err = lightFlow.Act()
 	}
 
-	fmt.Println(outPath)
 	os.Stdout.WriteString(outPath)
 }
 
