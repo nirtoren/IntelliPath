@@ -4,23 +4,23 @@ import (
 	"intellipath/internal/db"
 )
 
-type Light struct{
-	pathsdb *db.Database
+type Light struct {
+	pathsdb      *db.Database
 	absolutePath string
 }
 
-func InitLightFlow(pathDB *db.Database, absolutePath string) *Light{
-	if pathDB == nil{
+func InitLightFlow(pathDB *db.Database, absolutePath string) *Light {
+	if pathDB == nil {
 		panic("could not initialize Light flow due to DB issue")
 	}
 
 	return &Light{
-		pathsdb: pathDB,
+		pathsdb:      pathDB,
 		absolutePath: absolutePath,
 	}
 }
 
-func (light *Light) Act() (string, error){ // This should later on return a record
+func (light *Light) Act() (string, error) { // This should later on return a record
 	var outPath string
 
 	path, score, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
@@ -34,8 +34,8 @@ func (light *Light) Act() (string, error){ // This should later on return a reco
 		if err != nil {
 			return "", err
 		}
-		
-		if _ ,err = light.pathsdb.InsertPath(record); err != nil {
+
+		if _, err = light.pathsdb.InsertRecord(record); err != nil {
 			return "", err
 		}
 		outPath = light.absolutePath
@@ -47,6 +47,6 @@ func (light *Light) Act() (string, error){ // This should later on return a reco
 		outPath = light.absolutePath
 
 	}
-	
+
 	return outPath, nil
 }

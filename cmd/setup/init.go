@@ -5,8 +5,8 @@ package setup
 
 import (
 	"fmt"
-	"intellipath/internal/db"
 	"intellipath/internal/constants"
+	"intellipath/internal/db"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -26,7 +26,7 @@ to quickly create a Cobra application.`,
 		fmt.Println("init called")
 
 		database, err := db.GetDatabase(constants.DBname)
-		
+
 		if err != nil {
 			fmt.Printf("error was occured during icd init.")
 			os.Exit(1)
@@ -34,15 +34,14 @@ to quickly create a Cobra application.`,
 
 		// Testing insertion on initialization of the database
 		var userID int64
-		rec, _ := db.NewRecord("/home/desktop", 0)
-		userID, err = database.InsertPath(rec)
+		rec, _ := db.NewRecord("~/", 0)
+		userID, err = database.InsertRecord(rec)
 		if err != nil {
 			fmt.Printf("Error on insertion to database: %v\n", err)
 			os.Exit(1)
 		}
 
 		fmt.Printf("insertion completed. %d\n", userID)
-
 
 	},
 }

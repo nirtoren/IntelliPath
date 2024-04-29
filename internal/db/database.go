@@ -6,46 +6,47 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Database struct{
-	db 			   *sql.DB
+type Database struct {
+	db             *sql.DB
 	databaseExists bool
 }
 
-type PathRecord struct{
-	Path string
+type PathRecord struct {
+	Path  string
 	Score int8
 }
 
-func newDatabase(dbFile string) (*Database, error){
+func newDatabase(dbFile string) (*Database, error) {
 	_, err := os.Stat(dbFile)
 	databaseExists := !os.IsNotExist(err)
 
-	db ,err := sql.Open("sqlite3", dbFile)
-	
-	if err != nil{
+	db, err := sql.Open("sqlite3", dbFile)
+
+	if err != nil {
 		return nil, fmt.Errorf("error opening database %v", err)
 	}
 
 	return &Database{
-		db: db,
+		db:             db,
 		databaseExists: databaseExists,
-		}, nil
+	}, nil
 }
 
-func NewRecord(path string, score int8) (*PathRecord, error){
-	if path == ""{
+func NewRecord(path string, score int8) (*PathRecord, error) {
+	if path == "" {
 		return nil, errors.New("path can not be NULL")
 	}
 	return &PathRecord{Path: path,
-						Score: score}, nil
+		Score: score}, nil
 }
 
 func GetDatabase(dbFile string) (*Database, error) {
 	database, err := newDatabase(dbFile)
-	if err != nil{
+	if err != nil {
 		return nil, fmt.Errorf("error creating or opening database: %v", err)
 	}
 
@@ -83,14 +84,14 @@ func (d *Database) Close() error {
 	return nil
 }
 
-func (d *Database) InsertPath(pathRec *PathRecord) (int64, error) {
+func (d *Database) InsertRecord(pathRec *PathRecord) (int64, error) {
 
 	insertPathSQL := `
 		INSERT INTO paths (path, score) VALUES (?, ?)
 	`
 	result, err := d.db.Exec(insertPathSQL, pathRec.Path, pathRec.Score)
 
-	if err != nil{
+	if err != nil {
 		return 0, fmt.Errorf("error on insertion")
 	}
 
@@ -122,7 +123,7 @@ func (d *Database) GetAllPaths() ([]string, error) {
 			return nil, fmt.Errorf("error scanning row %v", err)
 		}
 		paths = append(paths, path)
-		
+
 	}
 
 	if err := rows.Err(); err != nil {
@@ -140,7 +141,7 @@ func (d *Database) PathSearch(pathToSearch string) (string, int8, error) {
 	rows, err := d.db.Query(searchPathsSQL, pathToSearch)
 	if err != nil {
 		fmt.Println(err)
-		
+
 	}
 
 	defer rows.Close()
@@ -154,7 +155,6 @@ func (d *Database) PathSearch(pathToSearch string) (string, int8, error) {
 	return path, score, err
 }
 
-
 func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) error {
 
 	updateScoresSQL := `UPDATE paths SET score = ? WHERE path = ?`
@@ -166,7 +166,6 @@ func (d *Database) UpdateScore(pathToUpdate string, oldScore int8) error {
 	return nil
 }
 
-
 func (d *Database) DeletePath(pathToDelete string) error {
 
 	deleteRecordSQL := `DELETE from paths WHERE path = ?`
@@ -177,10 +176,9 @@ func (d *Database) DeletePath(pathToDelete string) error {
 	return nil
 }
 
-
 func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error) {
-	selectQuery := "SELECT * FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ")+ ")"
-	
+	selectQuery := "SELECT * FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ") + ")"
+
 	args := make([]interface{}, len(optionalPaths))
 	for i, path := range optionalPaths {
 		args[i] = path
@@ -200,10 +198,10 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error
 		var score int8
 		err := rows.Scan(&path, &score)
 		if err != nil {
-			return []PathRecord{}, errors.New("failed to query for paths") 
+			return []PathRecord{}, errors.New("failed to query for paths")
 		}
 		records = append(records, PathRecord{Path: path, Score: score})
-		
+
 		if err := rows.Err(); err != nil {
 			return []PathRecord{}, err
 		}
