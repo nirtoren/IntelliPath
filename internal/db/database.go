@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"os"
 	"strings"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type Database struct {
-	db             *sql.DB
-	databaseExists bool
+	db	*sql.DB
 }
 
 type PathRecord struct {
@@ -20,19 +18,23 @@ type PathRecord struct {
 	Score int8
 }
 
-func newDatabase(dbFile string) (*Database, error) {
+func NewDatabase(dbFile string) (*Database, error) {
 	_, err := os.Stat(dbFile)
 	databaseExists := !os.IsNotExist(err)
+
+	if databaseExists {
+		fmt.Println("Seems like you aleadt have a database, try to remove it and re-run.")
+		os.Exit(1)
+	}
 
 	db, err := sql.Open("sqlite3", dbFile)
 
 	if err != nil {
-		return nil, fmt.Errorf("error opening database %v", err)
+		return nil, errors.New("an error occurred while creating the database")
 	}
 
 	return &Database{
-		db:             db,
-		databaseExists: databaseExists,
+		db:	db,
 	}, nil
 }
 
@@ -45,20 +47,24 @@ func NewRecord(path string, score int8) (*PathRecord, error) {
 }
 
 func GetDatabase(dbFile string) (*Database, error) {
-	database, err := newDatabase(dbFile)
-	if err != nil {
-		return nil, fmt.Errorf("error creating or opening database: %v", err)
-	}
-
-	if !database.databaseExists {
-		err := database.Initizlize()
+	if info, err := os.Stat(dbFile); os.IsNotExist(err) {
+		fmt.Println("A database was not inititalized. Run 'intellipath init'")
+		fmt.Println(info)
+		os.Exit(1)
+		return &Database{
+			db:	nil,
+		}, errors.New("A database was not inititalized. Run 'intellipath init'")
+	} else {
+		db, err := sql.Open("sqlite3", dbFile)
 		if err != nil {
-			return nil, fmt.Errorf("error initializing database: %v", err)
+			fmt.Println("Error: Could not get a database.")
+			os.Exit(1)
 		}
+
+		return &Database{
+			db:	db,
+		}, nil
 	}
-
-	return database, nil
-
 }
 
 func (d *Database) Initizlize() error {
