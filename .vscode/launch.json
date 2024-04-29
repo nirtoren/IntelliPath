@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/main.go",
-            "args": ["icd", "/home/nirt/Desktop"],
+            "args": ["icd", "test"],
             "env": {},
             "showLog": true
         }

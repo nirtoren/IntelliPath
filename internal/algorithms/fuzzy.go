@@ -2,6 +2,7 @@ package algo
 
 import (
 	"errors"
+	// "path/filepath"
 	"sort"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -16,6 +17,18 @@ type PathDist struct{
 
 func FuzzyFind(path string, dbPaths []string) ([]PathDist, error) {
 
+	// pathMap := make(map[string]string)
+	
+	// for _, fullPath := range dbPaths {
+	// 	base := filepath.Base(fullPath)
+	// 	pathMap[base] = fullPath
+	// }
+
+	// basePaths := make([]string, 0, len(pathMap))
+	// for k := range pathMap {
+	// 	basePaths = append(basePaths, k)
+	// }
+	
 	var foundPaths []string = fuzzy.Find(path, dbPaths) //Should get a list of optional paths 
 
 	if len(foundPaths) == 0 {
