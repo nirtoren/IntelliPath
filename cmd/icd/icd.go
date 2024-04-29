@@ -8,8 +8,8 @@ import (
 	"intellipath/internal/constants"
 	"intellipath/internal/db"
 	"intellipath/internal/flows"
+	"intellipath/internal/interfaces"
 	"os"
-	"path/filepath"
 
 	"github.com/spf13/cobra"
 )
@@ -24,10 +24,9 @@ var IcdCmd = &cobra.Command{
 
 func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
+	pathFormatter := interfaces.NewPathFormatter()
 	UserPath := args[0]
 	
-	fmt.Println("icd called")
-
 	// Stage 1: get the db
 	database, err := db.GetDatabase(constants.DBname)
 	if err != nil{
@@ -35,20 +34,17 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	}
 
 	// Stage 2: Check if users input path exists
-	absolutePath, err := filepath.Abs(UserPath)
-	if err != nil {
-		fmt.Printf("An error has occured!")
-	}
+	absolutePath := pathFormatter.ToAbs(UserPath)
+	isPathExists := pathFormatter.IsExists(absolutePath)
 
-	if _, err = os.Stat(absolutePath); os.IsNotExist(err) {
-		heavyFlow := flow.InitHeavyFlow(database, filepath.Base(UserPath))
-		outPath, err = heavyFlow.Act()
-	} else {
+	if isPathExists{
 		lightFlow := flow.InitLightFlow(database, absolutePath)
 		outPath, err = lightFlow.Act()
+	} else {
+		heavyFlow := flow.InitHeavyFlow(database, pathFormatter.ToBase(UserPath))
+		outPath, err = heavyFlow.Act()
 	}
 
-	fmt.Println(outPath)
 	os.Stdout.WriteString(outPath)
 }
 
