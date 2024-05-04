@@ -28,7 +28,7 @@ func RunIcd(cmd *cobra.Command, args []string) {
 
 	userPath := args[0]
 
-	// Stage 1: get the db
+	// Get the db
 	database, err := db.GetDatabase(constants.DBpath)
 	if err != nil {
 		fmt.Printf("An error has occured!")
@@ -36,11 +36,12 @@ func RunIcd(cmd *cobra.Command, args []string) {
 
 	defer database.Close()
 
+	// Parallel cleanup of un-touched paths
 	resultCh := make(chan error)
 	go db.ParallelCleanUp(database, resultCh)
 
 
-	// Stage 2: Check if users input path exists
+	// Check if users input actually path exists
 	absolutePath := pathFormatter.ToAbs(userPath)
 	isPathExists := pathFormatter.IsExists(absolutePath)
 
@@ -56,6 +57,7 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	if err != nil {
 		fmt.Println("error while cleaning up old records.")
 	}
+	
 	os.Stdout.WriteString(outPath)
 }
 
