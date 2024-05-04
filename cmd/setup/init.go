@@ -23,26 +23,25 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("init called")
+		fmt.Println("Initializing Intellipath...")
 
-		database, err := db.GetDatabase(constants.DBname)
-
+		database, err := db.NewDatabase(constants.DBpath)
 		if err != nil {
-			fmt.Printf("error was occured during icd init.")
+			fmt.Println("error was occured during intellipath init")
 			os.Exit(1)
 		}
 
-		// Testing insertion on initialization of the database
-		var userID int64
+		_ = database.Initizlize()
+
+		// First insertion to the database - path to machine root
 		rec, _ := db.NewRecord("~/", 0)
-		userID, err = database.InsertRecord(rec)
+		_, err = database.InsertRecord(rec)
 		if err != nil {
 			fmt.Printf("Error on insertion to database: %v\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("insertion completed. %d\n", userID)
-
+		fmt.Println("Inititalization completed.")
 	},
 }
 

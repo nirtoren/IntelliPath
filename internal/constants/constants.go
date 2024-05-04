@@ -1,5 +1,5 @@
 package constants
 
 const (
-	DBname = "Paths.db"
+	DBpath = "/usr/local/bin/intellipath/ipaths.db"
 )

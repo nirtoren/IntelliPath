@@ -2,6 +2,7 @@ package algo
 
 import (
 	"errors"
+	"path/filepath"
 	"sort"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
@@ -16,28 +17,40 @@ type PathDist struct{
 
 func FuzzyFind(path string, dbPaths []string) ([]PathDist, error) {
 
-	var foundPaths []string = fuzzy.Find(path, dbPaths) //Should get a list of optional paths 
+	pathMap := make(map[string]string)
+	
+	for _, fullPath := range dbPaths {
+		base := filepath.Base(fullPath)
+		pathMap[base] = fullPath
+	}
+
+	basePaths := make([]string, 0, len(pathMap))
+	for k := range pathMap {
+		basePaths = append(basePaths, k)
+	}
+	
+	var foundPaths []string = fuzzy.Find(path, basePaths) //Should get a list of optional paths 
 
 	if len(foundPaths) == 0 {
 		// Should exit the program with a message to the user
 		return []PathDist{}, errors.New("could not find suitable path") // In case could not find any match
 
 	} else if len(foundPaths) == 1{
-		singlePath := PathDist{Path: foundPaths[0], LevDistance: 0}
+		singlePath := PathDist{Path: pathMap[foundPaths[0]], LevDistance: 0}
 		return []PathDist{singlePath}, nil // In case only one match was found, no need to procced to Levenshtein OR Score filters
 	
 	} else { // In case more then one match was found
-		levenshteinPaths := findMinLevenshteinDistance(path, foundPaths, findTwoMin) // Should get a list of two elements for future score filtering
+		levenshteinPaths := findMinLevenshteinDistance(path, foundPaths, findTwoMin, pathMap) // Should get a list of two elements for future score filtering
 		return levenshteinPaths, nil
 	}
 }
 
-func findMinLevenshteinDistance(userInput string, foundPaths []string, minFunction MinFunc) []PathDist {
+func findMinLevenshteinDistance(userInput string, foundPaths []string, minFunction MinFunc, pathMap map[string]string) []PathDist {
 	var pathDist []PathDist
 
 	for _, path := range foundPaths{
 		distance := fuzzy.LevenshteinDistance(userInput, path)
-		pathDist = append(pathDist, PathDist{Path: path, LevDistance: distance})
+		pathDist = append(pathDist, PathDist{Path: pathMap[path], LevDistance: distance})
 	}
 
 	minimalLevenshtainDistance := minFunction(pathDist)
