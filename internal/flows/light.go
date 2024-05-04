@@ -4,23 +4,23 @@ import (
 	"intellipath/internal/db"
 )
 
-type Light struct {
+type Direct struct {
 	pathsdb      *db.Database
 	absolutePath string
 }
 
-func InitLightFlow(pathDB *db.Database, absolutePath string) *Light {
+func InitDirectFlow(pathDB *db.Database, absolutePath string) *Direct {
 	if pathDB == nil {
 		panic("could not initialize Light flow due to DB issue")
 	}
 
-	return &Light{
+	return &Direct{
 		pathsdb:      pathDB,
 		absolutePath: absolutePath,
 	}
 }
 
-func (light *Light) Act() (string, error) { // This should later on return a record
+func (light *Direct) Act() (string, error) { // This should later on return a record
 	var outPath string
 
 	path, score, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
