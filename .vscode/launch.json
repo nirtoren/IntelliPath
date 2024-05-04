@@ -10,7 +10,7 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/main.go",
-            "args": ["icd", "test1"],
+            "args": ["icd", "Desk"],
             "env": {},
             "showLog": true
         }

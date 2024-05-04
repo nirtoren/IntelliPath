@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
+
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -68,16 +70,45 @@ func GetDatabase(dbFile string) (*Database, error) {
 }
 
 func (d *Database) Initizlize() error {
-	schemaSQL := `
+	createSchemaSQL := `
 		CREATE TABLE IF NOT EXISTS paths (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL UNIQUE,
-			score INTEGER
+			score INTEGER,
+			last_touched DATETIME
 		)
 	`
-	_, err := d.db.Exec(schemaSQL)
+	_, err := d.db.Exec(createSchemaSQL)
 	if err != nil {
 		return fmt.Errorf("error creating table: %v", err)
 	}
+
+
+	// trigger for updating 'last_touched' after INSERT
+	_, err = d.db.Exec(`
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		AFTER INSERT ON paths
+		BEGIN
+			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
+		END;
+	`)
+	if err != nil {
+		return fmt.Errorf("could not initialize trigger")
+	}
+
+	// trigger for updating 'last_touched' after UPDATE
+	_, err = d.db.Exec(`
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		AFTER UPDATE ON paths
+		BEGIN
+			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
+		END;
+	`)
+
+	if err != nil {
+		return fmt.Errorf("could not initialize trigger")
+	}
+
 
 	return nil
 }
@@ -88,6 +119,13 @@ func (d *Database) Close() error {
 	}
 
 	return nil
+}
+
+func ParallelCleanUp(d *Database, resultCh chan<-error){
+	cutOffTime := time.Now().Add(-5 * 24 * time.Hour)
+
+	_, err := d.db.Exec("DELETE FROM paths WHERE last_touched < ?", cutOffTime)
+	resultCh <- err
 }
 
 func (d *Database) InsertRecord(pathRec *PathRecord) (int64, error) {
@@ -200,9 +238,11 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]PathRecord, error
 	var records []PathRecord
 
 	for rows.Next() {
+		var id int
 		var path string
 		var score int8
-		err := rows.Scan(&path, &score)
+		var last_touched any
+		err := rows.Scan(&id,&path, &score, &last_touched)
 		if err != nil {
 			return []PathRecord{}, errors.New("failed to query for paths")
 		}
