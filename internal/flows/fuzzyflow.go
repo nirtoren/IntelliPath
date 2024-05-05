@@ -48,32 +48,32 @@ func (h *FuzzyFlow) Act() (string, error) {
 	}
 
 	// filter by score function
-	outPath, score, err := h.filterByScore(records)
+	rec, err := h.filterByScore(records)
 	if err != nil {
 		return "", errors.New("failed to filter records by score")
 	}
 
 	// Check if found path exists
-	if !pathFormatter.IsExists(outPath) {
-		h.pathsdb.DeletePath(outPath)
+	if !pathFormatter.IsExists(rec.GetPath()) {
+		h.pathsdb.DeletePath(rec)
 		panic("Path does not exists")
 	} else {
-		_ = h.pathsdb.UpdateScore(outPath, score)
-		return outPath, nil
+		_ = h.pathsdb.UpdateScore(rec)
+		return rec.GetPath(), nil
 	}
 }
 
-func (h *FuzzyFlow) filterByScore(records []interfaces.PathRecord) (string, int, error) {
+func (h *FuzzyFlow) filterByScore(records []*interfaces.PathRecord) (*interfaces.PathRecord, error) {
 
 	if len(records) < 1 {
-		return "", 0, errors.New("could not find any paths")
+		return nil, errors.New("could not find any paths")
 	} else if len(records) == 1 {
-		return records[0].GetPath(), records[0].GetScore(), nil
+		return records[0], nil
 	} else {
 		if records[0].GetScore() > records[1].GetScore() {
-			return records[0].GetPath(), records[0].GetScore(), nil
+			return records[0], nil
 		} else {
-			return records[1].GetPath(), records[0].GetScore(), nil
+			return records[1], nil
 		}
 	}
 }

@@ -4,7 +4,6 @@ package interfaces
 
 import (
 	"errors"
-	// "intellipath/internal/db"
 )
 
 type Record interface{
