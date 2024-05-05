@@ -63,17 +63,17 @@ func (h *FuzzyFlow) Act() (string, error) {
 	}
 }
 
-func (h *FuzzyFlow) filterByScore(records []db.PathRecord) (string, int8, error) {
+func (h *FuzzyFlow) filterByScore(records []interfaces.PathRecord) (string, int, error) {
 
 	if len(records) < 1 {
 		return "", 0, errors.New("could not find any paths")
 	} else if len(records) == 1 {
-		return records[0].Path, records[0].Score, nil
+		return records[0].GetPath(), records[0].GetScore(), nil
 	} else {
-		if records[0].Score > records[1].Score {
-			return records[0].Path, records[0].Score, nil
+		if records[0].GetScore() > records[1].GetScore() {
+			return records[0].GetPath(), records[0].GetScore(), nil
 		} else {
-			return records[1].Path, records[0].Score, nil
+			return records[1].GetPath(), records[0].GetScore(), nil
 		}
 	}
 }

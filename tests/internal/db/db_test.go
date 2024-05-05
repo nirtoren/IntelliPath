@@ -3,6 +3,7 @@ package db_test
 import (
 	"testing"
 	"intellipath/internal/db"
+	"intellipath/internal/interfaces"
 )
 
 func TestGetDB(t *testing.T) {
@@ -23,7 +24,7 @@ func TestDBInsertion(t *testing.T) {
 
 	numOfRecs := len(paths)
 
-	rec, _ := db.NewRecord("/home/nirt", 0)
+	rec, _ := interfaces.NewRecord("/home/nirt", 0)
 	_, err = test_db.InsertRecord(rec)
 	
 	if err != nil {
@@ -54,16 +55,4 @@ func TestGetRecordsByName(t *testing.T) {
 		t.FailNow()
 	}
 
-}
-
-func TestUpdateScore(t *testing.T) {
-	test_db, _ := db.GetDatabase("test_paths.db")
-	if test_db == nil {
-		t.FailNow()
-	}
-
-	paths := []string{"/home/nirt"}
-	rec, _ := test_db.GetRecordsByName(paths)
-	
-	err := test_db.UpdateScore("/home/nirt", 0)
 }

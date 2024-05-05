@@ -1,32 +1,36 @@
 // Redundant currently
 
-
 package interfaces
 
 import (
-	"intellipath/internal/db"
+	"errors"
+	// "intellipath/internal/db"
 )
 
-type PathRecord struct{
-	Record
-	Path string
-	Score int8
-}
-
 type Record interface{
-	ScoreUpdate(*db.Database, db.PathRecord) error
-	GetScore(db.PathRecord) int
+	GetScore() int
+	GetPath() string
 }
 
-func ScoreUpdate(db *db.Database, record db.PathRecord) error {
-	return db.UpdateScore(record.Path, record.Score)
+type PathRecord struct{
+	path string
+	score int
 }
 
-func GetScore(record db.PathRecord) int {
-	return int(record.Score)
+
+func NewRecord(path string, score int) (*PathRecord, error) {
+	if path == "" {
+		return nil, errors.New("path can not be NULL")
+	}
+	return &PathRecord{path: path,
+		score: score}, nil
 }
 
-func GetPath(record db.PathRecord) string {
-	return record.Path
+func (r *PathRecord) GetScore() int {
+	return int(r.score)
+}
+
+func (r *PathRecord) GetPath() string {
+	return r.path
 }
 

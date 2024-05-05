@@ -2,6 +2,7 @@ package flow
 
 import (
 	"intellipath/internal/db"
+	i "intellipath/internal/interfaces"
 )
 
 type Direct struct {
@@ -30,7 +31,7 @@ func (light *Direct) Act() (string, error) { // This should later on return a re
 
 	switch path {
 	case "": // In case no record was found
-		record, err := db.NewRecord(light.absolutePath, 0)
+		record, err := i.NewRecord(light.absolutePath, 0)
 		if err != nil {
 			return "", err
 		}
