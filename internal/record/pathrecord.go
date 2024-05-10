@@ -1,15 +1,8 @@
-// Redundant currently
-
-package interfaces
+package record
 
 import (
 	"errors"
 )
-
-type Record interface{
-	GetScore() int
-	GetPath() string
-}
 
 type PathRecord struct{
 	path string

@@ -3,16 +3,17 @@ package flow
 import (
 	"errors"
 	algo "intellipath/internal/algorithms"
-	"intellipath/internal/db"
-	"intellipath/internal/interfaces"
+	"intellipath/internal/record"
+	"intellipath/internal/utils"
+
 )
 
 type FuzzyFlow struct {
-	pathsdb  *db.Database
+	pathsdb  *record.Database
 	basePath string
 }
 
-func InitFuzzyFlow(pathDB *db.Database, basePath string) *FuzzyFlow {
+func InitFuzzyFlow(pathDB *record.Database, basePath string) *FuzzyFlow {
 	if pathDB == nil {
 		panic("could not initialize Heavy flow due to DB issue")
 	}
@@ -25,7 +26,7 @@ func InitFuzzyFlow(pathDB *db.Database, basePath string) *FuzzyFlow {
 
 func (h *FuzzyFlow) Act() (string, error) {
 	// Check in DB + fuzzy + levinshtein
-	pathFormatter := interfaces.NewPathFormatter()
+	pathFormatter := utils.NewPathFormatter()
 
 	paths, err := h.pathsdb.GetAllPaths()
 	if err != nil {
@@ -63,7 +64,7 @@ func (h *FuzzyFlow) Act() (string, error) {
 	}
 }
 
-func (h *FuzzyFlow) filterByScore(records []*interfaces.PathRecord) (*interfaces.PathRecord, error) {
+func (h *FuzzyFlow) filterByScore(records []*record.PathRecord) (*record.PathRecord, error) {
 
 	if len(records) < 1 {
 		return nil, errors.New("could not find any paths")

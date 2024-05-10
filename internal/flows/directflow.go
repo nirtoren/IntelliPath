@@ -1,16 +1,15 @@
 package flow
 
 import (
-	"intellipath/internal/db"
-	i "intellipath/internal/interfaces"
+	"intellipath/internal/record"
 )
 
 type Direct struct {
-	pathsdb      *db.Database
+	pathsdb      *record.Database
 	absolutePath string
 }
 
-func InitDirectFlow(pathDB *db.Database, absolutePath string) *Direct {
+func InitDirectFlow(pathDB *record.Database, absolutePath string) *Direct {
 	if pathDB == nil {
 		panic("could not initialize Light flow due to DB issue")
 	}
@@ -31,7 +30,7 @@ func (light *Direct) Act() (string, error) { // This should later on return a re
 
 	switch rec.GetPath() {
 	case "": // In case no record was found
-		record, err := i.NewRecord(light.absolutePath, 0)
+		record, err := record.NewRecord(light.absolutePath, 0)
 		if err != nil {
 			return "", err
 		}

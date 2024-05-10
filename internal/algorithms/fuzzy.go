@@ -2,8 +2,8 @@ package algo
 
 import (
 	"errors"
-	"path/filepath"
 	"sort"
+	"intellipath/internal/utils"
 
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
@@ -18,9 +18,9 @@ type PathDist struct{
 func FuzzyFind(path string, dbPaths []string) ([]PathDist, error) {
 
 	pathMap := make(map[string]string)
-	
+	formatter := utils.NewPathFormatter()
 	for _, fullPath := range dbPaths {
-		base := filepath.Base(fullPath)
+		base := formatter.ToBase(fullPath)
 		pathMap[base] = fullPath
 	}
 
