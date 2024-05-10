@@ -24,12 +24,12 @@ func InitDirectFlow(pathDB *db.Database, absolutePath string) *Direct {
 func (light *Direct) Act() (string, error) { // This should later on return a record
 	var outPath string
 
-	path, score, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
+	rec, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
 	if err != nil {
 		return "", err
 	}
 
-	switch path {
+	switch rec.GetPath() {
 	case "": // In case no record was found
 		record, err := i.NewRecord(light.absolutePath, 0)
 		if err != nil {
@@ -42,7 +42,7 @@ func (light *Direct) Act() (string, error) { // This should later on return a re
 		outPath = light.absolutePath
 
 	case light.absolutePath: // In case a matching record was found
-		if err := light.pathsdb.UpdateScore(light.absolutePath, score); err != nil {
+		if err := light.pathsdb.UpdateScore(rec); err != nil {
 			return "", err
 		}
 		outPath = light.absolutePath

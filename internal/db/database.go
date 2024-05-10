@@ -176,10 +176,10 @@ func (d *Database) GetAllPaths() ([]string, error) {
 	return paths, nil
 }
 
-func (d *Database) PathSearch(pathToSearch string) (string, int, error) {
+func (d *Database) PathSearch(pathToSearch string) (*interfaces.PathRecord, error) {
 
-	var path string
-	var score int
+	var path string = ""
+	var score int = 0
 
 	searchPathsSQL := "SELECT path,score FROM paths WHERE path = ?"
 	rows, err := d.db.Query(searchPathsSQL, pathToSearch)
@@ -196,32 +196,34 @@ func (d *Database) PathSearch(pathToSearch string) (string, int, error) {
 		}
 	}
 
-	return path, score, err
+	newRec,_ := interfaces.NewRecord(path, score)
+
+	return newRec, err
 }
 
-func (d *Database) UpdateScore(pathToUpdate string, oldScore int) error {
+func (d *Database) UpdateScore(pathRec *interfaces.PathRecord) error {
 
 	updateScoresSQL := `UPDATE paths SET score = ? WHERE path = ?`
-	newScore := oldScore + 1
-	_, err := d.db.Exec(updateScoresSQL, newScore, pathToUpdate)
+	newScore := pathRec.GetScore() + 1
+	_, err := d.db.Exec(updateScoresSQL, newScore, pathRec.GetPath())
 	if err != nil {
 		return errors.New("failed updating the score of a the path")
 	}
 	return nil
 }
 
-func (d *Database) DeletePath(pathToDelete string) error {
+func (d *Database) DeletePath(pathRec *interfaces.PathRecord) error {
 
 	deleteRecordSQL := `DELETE from paths WHERE path = ?`
-	_, err := d.db.Exec(deleteRecordSQL, pathToDelete)
+	_, err := d.db.Exec(deleteRecordSQL, pathRec.GetPath())
 	if err != nil {
 		return errors.New("failed updating the score of a the path")
 	}
 	return nil
 }
 
-func (d *Database) GetRecordsByName(optionalPaths []string) ([]interfaces.PathRecord, error) {
-	selectQuery := "SELECT * FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ") + ")"
+func (d *Database) GetRecordsByName(optionalPaths []string) ([]*interfaces.PathRecord, error) {
+	selectQuery := "SELECT path, score FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ") + ")"
 
 	args := make([]interface{}, len(optionalPaths))
 	for i, path := range optionalPaths {
@@ -230,28 +232,28 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]interfaces.PathRe
 
 	rows, err := d.db.Query(selectQuery, args...)
 	if err != nil {
-		return []interfaces.PathRecord{}, errors.New("failed to query for paths")
+		return nil, errors.New("failed to query for paths")
 	}
 
 	defer rows.Close()
 
-	var records []interfaces.PathRecord
+	var records []*interfaces.PathRecord
 
 	for rows.Next() {
-		var id int
+		// var id int
 		var path string
 		var score int
-		var last_touched any
-		err := rows.Scan(&id,&path, &score, &last_touched)
+		// var last_touched any
+		err := rows.Scan(&path, &score)
 		if err != nil {
-			return []interfaces.PathRecord{}, errors.New("failed to query for paths")
+			return nil, errors.New("failed to query for paths")
 		}
-		new_rec, _ := interfaces.NewRecord(path, score)
-		records = append(records, *new_rec)
-
 		if err := rows.Err(); err != nil {
-			return []interfaces.PathRecord{}, err
+			return nil, err
 		}
+
+		new_rec, _ := interfaces.NewRecord(path, score)
+		records = append(records, new_rec)
 	}
 	return records, nil
 }

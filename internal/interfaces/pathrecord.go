@@ -4,7 +4,6 @@ package interfaces
 
 import (
 	"errors"
-	// "intellipath/internal/db"
 )
 
 type Record interface{
@@ -27,10 +26,16 @@ func NewRecord(path string, score int) (*PathRecord, error) {
 }
 
 func (r *PathRecord) GetScore() int {
-	return int(r.score)
+	if r != nil {
+		return int(r.score)
+	}
+	return 0
 }
 
 func (r *PathRecord) GetPath() string {
-	return r.path
+	if r != nil {
+		return r.path
+	}
+	return ""
 }
 
