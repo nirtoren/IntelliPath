@@ -25,17 +25,17 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
 
-		database, err := record.NewDatabase(constants.DBpath)
-		if err != nil {
-			fmt.Println("error was occured during intellipath init")
-			os.Exit(1)
-		}
+		database := record.GetDbInstance(constants.DBpath)
+		// if err != nil {
+		// 	fmt.Println("error was occured during intellipath init")
+		// 	os.Exit(1)
+		// }
 
 		_ = database.Initizlize()
 
 		// First insertion to the database - path to machine root
 		rec, _ := record.NewRecord("~/", 0)
-		_, err = database.InsertRecord(rec)
+		_, err := database.InsertRecord(rec)
 		if err != nil {
 			fmt.Printf("Error on insertion to database: %v\n", err)
 			os.Exit(1)

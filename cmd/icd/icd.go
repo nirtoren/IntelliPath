@@ -24,15 +24,13 @@ var IcdCmd = &cobra.Command{
 
 func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
+	var err error
 	pathFormatter := utils.NewPathFormatter()
 
 	userPath := args[0]
 
 	// Get the db
-	database, err := record.GetDatabase(constants.DBpath)
-	if err != nil {
-		fmt.Printf("An error has occured!")
-	}
+	database := record.GetDbInstance(constants.DBpath)
 
 	defer database.Close()
 
