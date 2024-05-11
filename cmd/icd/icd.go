@@ -46,11 +46,11 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	isPathExists := pathFormatter.IsExists(absolutePath)
 
 	if isPathExists {
-		lightFlow := flow.InitDirectFlow(database, absolutePath)
-		outPath, err = lightFlow.Act()
+		directFlow := flow.InitDirectFlow(database, absolutePath)
+		outPath, err = directFlow.Act()
 	} else {
-		heavyFlow := flow.InitFuzzyFlow(database, pathFormatter.ToBase(userPath))
-		outPath, err = heavyFlow.Act()
+		fuzzyFlow := flow.InitFuzzyFlow(database, pathFormatter.ToBase(userPath))
+		outPath, err = fuzzyFlow.Act()
 	}
 
 	err = <-resultCh

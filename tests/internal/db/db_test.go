@@ -1,13 +1,13 @@
 package db_test
 
 import (
+	"intellipath/internal/record"
 	"testing"
-	"intellipath/internal/db"
-	"intellipath/internal/interfaces"
 )
 
+
 func TestGetDB(t *testing.T) {
-	test_db, _ := db.GetDatabase("test_paths.db")
+	test_db, _ := record.GetDatabase("test_paths.db")
 	if test_db == nil {
 		t.FailNow()
 	}
@@ -15,7 +15,7 @@ func TestGetDB(t *testing.T) {
 }
 
 func TestDBInsertion(t *testing.T) {
-	test_db, _ := db.GetDatabase("test_paths.db")
+	test_db, _ := record.GetDatabase("test_paths.db")
 
 	paths, err := test_db.GetAllPaths()
 	if err != nil {
@@ -24,7 +24,7 @@ func TestDBInsertion(t *testing.T) {
 
 	numOfRecs := len(paths)
 
-	rec, _ := interfaces.NewRecord("/home/nirt", 0)
+	rec, _ := record.NewRecord("/home/nirt", 0)
 	_, err = test_db.InsertRecord(rec)
 	
 	if err != nil {
@@ -33,13 +33,13 @@ func TestDBInsertion(t *testing.T) {
 
 	paths, _ = test_db.GetAllPaths()
 
-	if numOfRecs !=  len(paths) + 1 {
+	if numOfRecs + 1 !=  len(paths){
 		t.FailNow()
 	}
 }
 
 func TestGetRecordsByName(t *testing.T) {
-	test_db, _ := db.GetDatabase("test_paths.db")
+	test_db, _ := record.GetDatabase("test_paths.db")
 	if test_db == nil {
 		t.FailNow()
 	}
