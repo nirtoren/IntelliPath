@@ -26,13 +26,12 @@ to quickly create a Cobra application.`,
 		fmt.Println("Initializing Intellipath...")
 
 		database := record.GetDbInstance(constants.DBpath)
-		// if err != nil {
-		// 	fmt.Println("error was occured during intellipath init")
-		// 	os.Exit(1)
-		// }
 
-		_ = database.Initizlize()
-
+		errr := database.Initizlize()
+		if errr != nil {
+			fmt.Printf("Error on initialization to database: %v\n", errr)
+			os.Exit(1)
+		}
 		// First insertion to the database - path to machine root
 		rec, _ := record.NewRecord("~/", 0)
 		_, err := database.InsertRecord(rec)

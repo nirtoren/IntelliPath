@@ -93,6 +93,7 @@ func (d *Database) Initizlize() error {
 			last_touched DATETIME
 		)
 	`
+	
 	_, err := d.db.Exec(createSchemaSQL)
 	if err != nil {
 		return fmt.Errorf("error creating table: %v", err)
