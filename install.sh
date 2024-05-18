@@ -33,33 +33,24 @@ sudo tar -xzf "$TAR_FILE" -C "$INSTALL_DIR" || { print_error "Failed to install 
 sudo chmod +x "$INSTALL_DIR/$EXECUTABLE_NAME" || { print_error "Failed to set permissions."; cleanup; }
 
 # Prompt user to modify bashrc/zshrc
-read -p "Do you want to add $INSTALL_DIR to your PATH in .bashrc/.zshrc? (y/n): " add_to_path
-if [ "$add_to_path" == "y" ]; then
-    echo "You picked Yes"
-    echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> ~/.bashrc || { print_error "Failed to modify .bashrc."; cleanup; }
-    source ~/.bashrc
-else
-    cleanup
-fi
+# read -p "Do you want to add $INSTALL_DIR to your PATH in .bashrc/.zshrc? (y/n): " add_to_path
+# if [ "$add_to_path" == "y" ]; then
+#     echo "You picked Yes"
+#     echo "export PATH=\"$INSTALL_DIR:\$PATH\"" >> ~/.bashrc || { print_error "Failed to modify .bashrc."; cleanup; }
+#     source ~/.bashrc
+# else
+#     cleanup
+# fi
 
 # Prompt user to add alias
-read -p "Do you want to add 'icd' alias for the executable? (y/n): " add_alias
-if [ "$add_alias" == "y" ]; then
-    echo "You picked Yes"
-    echo "alias icd=\"$INSTALL_DIR/$EXECUTABLE_NAME icd\"" >> ~/.bashrc || { print_error "Failed to add alias."; cleanup; }
-    source ~/.bashrc
-else
-    cleanup
-fi
-
-# Run intellipath init
-intellipath init
-
-# Check if database file exists
-if [ ! -f "$INSTALL_DIR/ipath.db" ]; then
-    print_error "Database file not found."
-    cleanup
-fi
+# read -p "Do you want to add 'icd' alias for the executable? (y/n): " add_alias
+# if [ "$add_alias" == "y" ]; then
+#     echo "You picked Yes"
+#     echo "alias icd=\"$INSTALL_DIR/$EXECUTABLE_NAME icd\"" >> ~/.bashrc || { print_error "Failed to add alias."; cleanup; }
+#     source ~/.bashrc
+# else
+#     cleanup
+# fi
 
 echo "Installation completed successfully."
 exit 0
