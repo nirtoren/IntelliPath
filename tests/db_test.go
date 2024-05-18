@@ -1,4 +1,4 @@
-package db_test
+package internal_test
 
 import (
 	"intellipath/internal/record"

@@ -1,4 +1,4 @@
-package pathformatter_test
+package internal_test
 
 import (
 	"testing"
