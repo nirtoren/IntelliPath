@@ -6,9 +6,9 @@ package icd
 import (
 	"fmt"
 	"intellipath/internal/constants"
-	"intellipath/internal/db"
+	"intellipath/internal/record"
+	"intellipath/internal/utils"
 	flow "intellipath/internal/flows"
-	"intellipath/internal/interfaces"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,21 +24,19 @@ var IcdCmd = &cobra.Command{
 
 func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
-	pathFormatter := interfaces.NewPathFormatter()
+	var err error
+	pathFormatter := utils.NewPathFormatter()
 
 	userPath := args[0]
 
 	// Get the db
-	database, err := db.GetDatabase(constants.DBpath)
-	if err != nil {
-		fmt.Printf("An error has occured!")
-	}
+	database := record.GetDbInstance(constants.DBpath)
 
 	defer database.Close()
 
 	// Parallel cleanup of un-touched paths
 	resultCh := make(chan error)
-	go db.ParallelCleanUp(database, resultCh)
+	go record.ParallelCleanUp(database, resultCh)
 
 
 	// Check if users input actually path exists
@@ -46,11 +44,11 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	isPathExists := pathFormatter.IsExists(absolutePath)
 
 	if isPathExists {
-		lightFlow := flow.InitDirectFlow(database, absolutePath)
-		outPath, err = lightFlow.Act()
+		directFlow := flow.InitDirectFlow(database, absolutePath)
+		outPath, err = directFlow.Act()
 	} else {
-		heavyFlow := flow.InitFuzzyFlow(database, pathFormatter.ToBase(userPath))
-		outPath, err = heavyFlow.Act()
+		fuzzyFlow := flow.InitFuzzyFlow(database, pathFormatter.ToBase(userPath))
+		outPath, err = fuzzyFlow.Act()
 	}
 
 	err = <-resultCh
