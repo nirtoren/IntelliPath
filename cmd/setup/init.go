@@ -25,6 +25,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
 
+		// value, exists := os.LookupEnv("_IPATH_DB_DIR") 
+		// if !exists{
+		// 	fmt.Printf("set _IPATH_DB_DIR for the location of the database.")
+		// 	os.Exit(1)
+		// }
+
 		database := record.GetDbInstance(constants.DBpath)
 
 		errr := database.Initizlize()
