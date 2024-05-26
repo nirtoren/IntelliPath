@@ -1,13 +1,20 @@
 #!/bin/bash
 
-
+#VARIABLES
 EXECUTABLE_NAME="intellipath"
-INSTALL_DIR="/usr/local/bin/$EXECUTABLE_NAME"
 TAR_FILE="./$EXECUTABLE_NAME.tar.gz"
 
 print_error() {
     echo -e "\033[0;31mERROR: $1\033[0m"
 }
+
+# Check if the INTELLIPATH_DIR environment variable is set
+if [ -z "$_INTELLIPATH_DIR" ]; then
+    print_error "The environment variable INTELLIPATH_DIR is not set. Please set it before running this script."
+    exit 1
+fi
+
+INSTALL_DIR="$_INTELLIPATH_DIR/$EXECUTABLE_NAME"
 
 # Function to cleanup on installation failure
 cleanup() {
