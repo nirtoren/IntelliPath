@@ -4,6 +4,10 @@ package utils
 
 import (
 	"fmt"
+	"os"
+	"errors"
+	"intellipath/internal/constants"
+
 )
 
 type Validate interface{
@@ -13,17 +17,10 @@ type Validate interface{
 
 type validator struct{
 	Validate
-	userInput []string
 }
 
-func NewValidator(userInput []string) (*validator, error) {
-	if len(userInput) < 1 {
-		panic("Incorrect user input")
-	}
-
-	return &validator{
-		userInput: userInput,
-	}, nil
+func NewValidator() *validator {
+	return &validator{}
 }
 
 func (validator *validator) ValidateInput(userInput string) error {
@@ -33,5 +30,19 @@ func (validator *validator) ValidateInput(userInput string) error {
 
 func (validator *validator) ValidateFlags(flag string) error {
 	fmt.Println(flag)
+	return nil
+}
+
+func (validator *validator) ValidateENV() error {
+	_, exists := os.LookupEnv(constants.INTELLIPATH_DIR) 
+	if !exists{
+		return errors.New("_INTELLIPATH_DIR not found within environmental variables")
+	}
+
+	_, exists = os.LookupEnv(constants.INTELLIPATH_DB_DTIMER) 
+	if !exists{
+		return errors.New("_INTELLIPATH_DB_DTIMER not found within environmental variables")
+	}
+
 	return nil
 }

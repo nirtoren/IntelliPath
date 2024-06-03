@@ -137,7 +137,7 @@ func (d *Database) Close() error {
 	return nil
 }
 
-func ParallelCleanUp(d *Database, resultCh chan<-error){
+func ParallelCleanUp(d *Database, dtimer int, resultCh chan<-error){
 	cutOffTime := time.Now().Add(-5 * 24 * time.Hour)
 
 	_, err := d.db.Exec("DELETE FROM paths WHERE last_touched < ?", cutOffTime)

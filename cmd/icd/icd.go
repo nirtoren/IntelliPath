@@ -6,10 +6,11 @@ package icd
 import (
 	"fmt"
 	"intellipath/internal/constants"
+	flow "intellipath/internal/flows"
 	"intellipath/internal/record"
 	"intellipath/internal/utils"
-	flow "intellipath/internal/flows"
 	"os"
+	"strconv"
 
 	"github.com/spf13/cobra"
 )
@@ -25,18 +26,22 @@ var IcdCmd = &cobra.Command{
 func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
 	var err error
-	pathFormatter := utils.NewPathFormatter()
 
+	pathFormatter := utils.NewPathFormatter()
+	validator := utils.NewValidator()
+	validator.ValidateENV()
+	
 	userPath := args[0]
 
 	// Get the db
-	database := record.GetDbInstance(constants.DBpath)
+	database := record.GetDbInstance(constants.INTELLIPATH_DIR+constants.DBpath)
 
 	defer database.Close()
 
 	// Parallel cleanup of un-touched paths
 	resultCh := make(chan error)
-	go record.ParallelCleanUp(database, resultCh)
+	dtimer, _ := strconv.Atoi(constants.INTELLIPATH_DB_DTIMER)
+	go record.ParallelCleanUp(database, dtimer, resultCh)
 
 
 	// Check if users input actually path exists

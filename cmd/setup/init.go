@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"intellipath/internal/constants"
 	"intellipath/internal/record"
+	"intellipath/internal/utils"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,15 +25,11 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
+		validator := utils.NewValidator()
+		validator.ValidateENV()
 
-		value, exists := os.LookupEnv("_INTELLIPATH_DIR") 
-		if !exists{
-			fmt.Printf("set _INTELLIPATH_DIR for the location of the database.")
-			os.Exit(1)
-		}
-
+		value := os.Getenv(constants.INTELLIPATH_DIR) 
 		database := record.GetDbInstance(value+constants.DBpath)
-
 		errr := database.Initizlize()
 		if errr != nil {
 			fmt.Printf("Error on initialization to database: %v\n", errr)
