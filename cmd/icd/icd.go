@@ -34,7 +34,10 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	userPath := args[0]
 
 	// Get the db
-	database := record.GetDbInstance(constants.INTELLIPATH_DIR+constants.DBpath)
+	value := os.Getenv(constants.INTELLIPATH_DIR)
+	
+	database := record.GetDbInstance(value+constants.DBpath)
+	// ADD ERROR IN CASE DATABASE NOT FOUND
 
 	defer database.Close()
 

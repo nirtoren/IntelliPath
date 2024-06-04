@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"intellipath/internal/utils"
 	"strings"
 	"sync"
 	"time"
@@ -21,14 +22,15 @@ var (
 )
 
 func GetDbInstance(dbFile string) *Database {
-	// _, err := os.Stat(dbFile)
-	// databaseExists := !os.IsNotExist(err)
+	pathFormatter := utils.NewPathFormatter()
 
-	// if databaseExists {
-	// 	fmt.Println("Seems like you aleadt have a database, try to remove it and re-run.")
-	// 	os.Exit(1)
-	// }
-	
+	DBabsolutePath := pathFormatter.ToAbs(dbFile)
+	isDBExists := pathFormatter.IsExists(DBabsolutePath)
+
+	if !isDBExists {
+		panic("Could not find the database")
+	}
+
 	once.Do(func() {
 		var err error
 		db, err := sql.Open("sqlite3", dbFile)
