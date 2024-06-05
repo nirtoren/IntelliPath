@@ -38,7 +38,7 @@ func Execute() {
 func AddSubCommands() {
 	rootCmd.AddCommand(icd.IcdCmd)
 	rootCmd.AddCommand(setup.InitCmd)
-	rootCmd.AddCommand(setup.UninstallCmd)
+	rootCmd.AddCommand(setup.DeinitCmd)
 }
 
 func init() {
