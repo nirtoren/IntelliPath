@@ -6,7 +6,7 @@ package setup
 import (
 	"fmt"
 	"intellipath/internal/constants"
-	"log"
+		"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -36,7 +36,7 @@ to quickly create a Cobra application.`,
 		if choice == "y" {
 			// Delete the database and the executable
 			value := os.Getenv(constants.INTELLIPATH_DIR)
-			os.RemoveAll(value + constants.INTELLIPATH)
+			os.RemoveAll(value + constants.INTELLIPATH)			
 			
 			// Delete the icd() and the export PATH from bashrc
 			fmt.Println("Intellipath de-initialized successfully!")
