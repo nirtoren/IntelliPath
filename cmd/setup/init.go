@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"intellipath/internal/constants"
 	"intellipath/internal/record"
+	"intellipath/internal/database"
 	"intellipath/internal/utils"
 	"os"
 
@@ -29,7 +30,7 @@ to quickly create a Cobra application.`,
 		validator.ValidateENV()
 
 		value := os.Getenv(constants.INTELLIPATH_DIR) 
-		database := record.GetDbInstance(value+constants.DBpath)
+		database := database.GetDbInstance(value+constants.DBpath)
 		errr := database.Initizlize()
 		if errr != nil {
 			fmt.Printf("Error on initialization to database: %v\n", errr)

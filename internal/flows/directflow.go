@@ -1,52 +1,42 @@
-package flow
-
-import (
-	"intellipath/internal/record"
-)
+package pathfinder
 
 type Direct struct {
-	pathsdb      *record.Database
 	absolutePath string
 }
 
-func InitDirectFlow(pathDB *record.Database, absolutePath string) *Direct {
-	if pathDB == nil {
-		panic("could not initialize Light flow due to DB issue")
-	}
-
+func NewDirectFlow(absolutePath string) *Direct {
 	return &Direct{
-		pathsdb:      pathDB,
 		absolutePath: absolutePath,
 	}
 }
 
-func (light *Direct) Act() (string, error) { // This should later on return a record
+func (direct *Direct) FindMatch() string { // This should later on return a record
 	var outPath string
 
-	rec, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
+	rec, err := direct.pathsdb.PathSearch(direct.absolutePath) // This should return a record if it exists
 	if err != nil {
 		return "", err
 	}
 
 	switch rec.GetPath() {
 	case "": // In case no record was found
-		record, err := record.NewRecord(light.absolutePath, 0)
+		record, err := record.NewRecord(direct.absolutePath, 0)
 		if err != nil {
-			return "", err
+			return ""
 		}
 
-		if _, err = light.pathsdb.InsertRecord(record); err != nil {
-			return "", err
+		if _, err = direct.pathsdb.InsertRecord(record); err != nil {
+			return ""
 		}
-		outPath = light.absolutePath
+		outPath = direct.absolutePath
 
-	case light.absolutePath: // In case a matching record was found
-		if err := light.pathsdb.UpdateScore(rec); err != nil {
-			return "", err
+	case direct.absolutePath: // In case a matching record was found
+		if err := direct.pathsdb.UpdateScore(rec); err != nil {
+			return ""
 		}
-		outPath = light.absolutePath
+		outPath = direct.absolutePath
 
 	}
 
-	return outPath, nil
+	return outPath
 }

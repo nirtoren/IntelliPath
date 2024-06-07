@@ -10,20 +10,18 @@ import (
 
 )
 
-type Validate interface{
-	ValidateInput(string) error
+type InputValidator interface{
+	ValidateInputPath(string) error
 	ValidateFlags(string) error
 }
 
-type validator struct{
-	Validate
-}
+type validator struct{}
 
 func NewValidator() *validator {
 	return &validator{}
 }
 
-func (validator *validator) ValidateInput(userInput string) error {
+func (validator *validator) ValidateInputPath(userInput string) error {
 	fmt.Println(userInput)
 	return nil
 }
