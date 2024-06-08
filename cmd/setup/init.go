@@ -5,7 +5,6 @@ package setup
 
 import (
 	"fmt"
-	"intellipath/internal/constants"
 	"intellipath/internal/record"
 	"intellipath/internal/database"
 	"intellipath/internal/utils"
@@ -27,10 +26,9 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
 		validator := utils.NewValidator()
-		validator.ValidateENV()
+		validator.ValidateENVs()
 
-		value := os.Getenv(constants.INTELLIPATH_DIR) 
-		database := database.GetDbInstance(value+constants.DBpath)
+		database := database.GetDbInstance()
 		errr := database.Initizlize()
 		if errr != nil {
 			fmt.Printf("Error on initialization to database: %v\n", errr)

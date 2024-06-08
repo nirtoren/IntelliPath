@@ -1,21 +1,28 @@
 package pathfinder
 
+import (
+	"intellipath/internal/database"
+	"intellipath/internal/record"
+)
+
 type Direct struct {
 	absolutePath string
+	db database.Database
 }
 
-func NewDirectFlow(absolutePath string) *Direct {
+func NewDirectFlow(absolutePath string, db database.Database) *Direct {
 	return &Direct{
 		absolutePath: absolutePath,
+		db: db,
 	}
 }
 
 func (direct *Direct) FindMatch() string { // This should later on return a record
 	var outPath string
 
-	rec, err := direct.pathsdb.PathSearch(direct.absolutePath) // This should return a record if it exists
+	rec, err := direct.db.PathSearch(direct.absolutePath) // This should return a record if it exists
 	if err != nil {
-		return "", err
+		return ""
 	}
 
 	switch rec.GetPath() {
@@ -25,18 +32,33 @@ func (direct *Direct) FindMatch() string { // This should later on return a reco
 			return ""
 		}
 
-		if _, err = direct.pathsdb.InsertRecord(record); err != nil {
-			return ""
-		}
+		direct.SaveRecord(record)
+		// if _, err = direct.db.InsertRecord(record); err != nil {
+		// 	return ""
+		// }
 		outPath = direct.absolutePath
 
 	case direct.absolutePath: // In case a matching record was found
-		if err := direct.pathsdb.UpdateScore(rec); err != nil {
-			return ""
-		}
+		direct.UpdateRecord(rec)
+		// if err := direct.db.UpdateScore(rec); err != nil {
+		// 	return ""
+		// }
 		outPath = direct.absolutePath
 
 	}
 
 	return outPath
+}
+
+func (direct *Direct) SaveRecord(record *record.PathRecord) {
+	_, err := direct.db.InsertRecord(record)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (direct *Direct) UpdateRecord(record *record.PathRecord) {
+	if err := direct.db.UpdateScore(record); err != nil {
+		panic(err)
+	}
 }

@@ -11,7 +11,8 @@ type Formatter interface {
 	IsExists(string) bool
 }
 
-type PathFormatter struct {}
+type PathFormatter struct{}
+
 
 func NewPathFormatter() *PathFormatter {
 	return &PathFormatter{}

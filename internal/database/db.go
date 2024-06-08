@@ -16,7 +16,7 @@ import (
 type Database interface {
 	Close() error
 	DeletePath(pathRec *record.PathRecord) error
-	GetAllPaths() ([]string, error)
+	GetAllRecords() ([]*record.PathRecord, error)
 	GetRecordsByName(optionalPaths []string) ([]*record.PathRecord, error)
 	Initizlize() error
 	InsertRecord(pathRec *record.PathRecord) (int64, error)
@@ -33,15 +33,11 @@ var (
 	once       sync.Once
 )
 
-func GetDbInstance(dbFile string) *SQLDatabase {
-	pathFormatter := utils.NewPathFormatter()
-
-	DBabsolutePath := pathFormatter.ToAbs(dbFile)
-	isDBExists := pathFormatter.IsExists(DBabsolutePath)
-
-	if !isDBExists {
-		panic("Could not find the database")
-	}
+func GetDbInstance() *SQLDatabase {
+	var dbFile string
+	validator := utils.NewValidator()
+	ENVGetter := utils.NewENVGetter(validator)
+	dbFile = ENVGetter.GetDBPath()
 
 	once.Do(func() {
 		var err error
@@ -134,12 +130,12 @@ func (d *SQLDatabase) InsertRecord(pathRec *record.PathRecord) (int64, error) {
 	return userID, nil
 }
 
-func (d *SQLDatabase) GetAllPaths() ([]string, error) {
+func (d *SQLDatabase) GetAllRecords() ([]*record.PathRecord, error) {
 
-	var paths []string
+	var records []*record.PathRecord
 
 	getAllPathsSQL := `
-		SELECT path FROM paths
+		SELECT path, score FROM paths
 	`
 	rows, err := d.db.Query(getAllPathsSQL)
 	if err != nil {
@@ -149,17 +145,19 @@ func (d *SQLDatabase) GetAllPaths() ([]string, error) {
 
 	for rows.Next() {
 		var path string
-		if err := rows.Scan(&path); err != nil {
+		var score int
+		if err := rows.Scan(&path, &score); err != nil {
 			return nil, fmt.Errorf("error scanning row %v", err)
 		}
-		paths = append(paths, path)
+		record, _ := record.NewRecord(path, score)
+		records = append(records, record)
 
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating over rows: %v", err)
 	}
-	return paths, nil
+	return records, nil
 }
 
 func (d *SQLDatabase) PathSearch(pathToSearch string) (*record.PathRecord, error) {

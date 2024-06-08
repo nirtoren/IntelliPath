@@ -33,11 +33,10 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	validator.ValidateInputPath(userInput)
 
 	// Get GetENV<name>
-	validator.ValidateENV()
-	value := os.Getenv(constants.INTELLIPATH_DIR)
-	
+	validator.ValidateENVs()
+
 	// Get the db, DEPENDS ON ENV
-	db := database.GetDbInstance(value+constants.DBpath)
+	db := database.GetDbInstance()
 	defer db.Close()
 
 	// Parallel cleanup of un-touched paths
@@ -45,21 +44,8 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	dtimer, _ := strconv.Atoi(constants.INTELLIPATH_DB_DTIMER)
 	go database.ParallelCleanUp(db, dtimer, resultCh)
 
-
-	// Check if users input actually path exists
-	pathFormatter := utils.NewPathFormatter()
-	absolutePath := pathFormatter.ToAbs(userInput)
-	isPathExists := pathFormatter.IsExists(absolutePath)
-
-	var pathMatcher pathfinder.PathMatcher
-	if isPathExists {
-		pathMatcher = pathfinder.NewDirectFlow(absolutePath)
-	} else {
-		pathMatcher = pathfinder.NewFuzzyFlow(pathFormatter.ToBase(userInput))
-	}
-
-	flowManager := pathfinder.NewFlowManager(db, pathMatcher)
-	outPath = flowManager.FindClosestPath(userInput)
+	flowManager := pathfinder.NewFlowManager(db)
+	outPath = flowManager.Manage(userInput)
 
 	err = <-resultCh
 	if err != nil {

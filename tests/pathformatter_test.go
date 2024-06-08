@@ -1,8 +1,8 @@
 package internal_test
 
 import (
-	"testing"
 	"intellipath/internal/utils"
+	"testing"
 )
 
 func TestToBase(t *testing.T) {
