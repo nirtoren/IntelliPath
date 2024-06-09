@@ -41,13 +41,3 @@ func (fm *FlowManager) findFlow(userInput string) PathMatcher {
 
 	return pathMatcher
 }
-
-func (fm *FlowManager) savePath() string {
-
-	return "hh"
-}
-
-func (fm *FlowManager) updatePathScore() string {
-
-	return "hh"
-}
