@@ -5,7 +5,7 @@ package setup
 
 import (
 	"fmt"
-	"intellipath/internal/env"
+	// "intellipath/internal/env"
 	"intellipath/internal/record"
 	"intellipath/internal/record/db"
 
@@ -26,8 +26,8 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
-		validator := env.NewValidator()
-		validator.ValidateENVs()
+		// validator := env.NewValidator()
+		// validator.ValidateENVs()
 
 		database := db.GetDbInstance()
 		errr := database.Initizlize()

@@ -23,8 +23,8 @@ func (fm *FlowManager) Manage(userInput string) string {
 	// Validate input
 
 	chosenFlow := fm.findFlow(userInput)
-	chosenFlow.FindMatch()
-	return "hh"
+	outPath := chosenFlow.FindMatch()
+	return outPath
 }
 
 func (fm *FlowManager) findFlow(userInput string) PathMatcher {

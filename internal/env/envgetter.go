@@ -27,12 +27,12 @@ func (env *ENVGetter) GetDBPath() string {
 	dir, _ := env.validator.validateIntellipathDirENV()
 	dbFile = dir + constants.DBpath
 
-	DBabsolutePath, err := filepath.Abs(dbFile)
-	_, err = os.Stat(DBabsolutePath)
-	isDBExists := os.IsNotExist(err)
+	DBabsolutePath, _ := filepath.Abs(dbFile)
+	_, err := os.Stat(DBabsolutePath)
+	isDBExists := !os.IsNotExist(err)
 	if !isDBExists {
 		panic("Could not find the database")
 	}
 
-	return dbFile
+	return DBabsolutePath
 }

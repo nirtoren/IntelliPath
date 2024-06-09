@@ -33,16 +33,10 @@ func (direct *Direct) FindMatch() string { // This should later on return a reco
 		}
 
 		direct.SaveRecord(record)
-		// if _, err = direct.db.InsertRecord(record); err != nil {
-		// 	return ""
-		// }
 		outPath = direct.absolutePath
 
 	case direct.absolutePath: // In case a matching record was found
 		direct.UpdateRecord(rec)
-		// if err := direct.db.UpdateScore(rec); err != nil {
-		// 	return ""
-		// }
 		outPath = direct.absolutePath
 
 	}
