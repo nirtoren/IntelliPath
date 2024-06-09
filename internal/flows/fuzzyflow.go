@@ -2,19 +2,18 @@ package pathfinder
 
 import (
 	"errors"
-	"intellipath/internal/database"
 	"intellipath/internal/record"
-	"intellipath/internal/utils"
-	"intellipath/internal/stringmatchers"
+	"intellipath/internal/record/db"
+	"intellipath/internal/matcher"
 
 )
 
 type FuzzyFlow struct {
 	basePath string
-	db database.Database
+	db db.Database
 }
 
-func NewFuzzyFlow(basePath string, db database.Database) *FuzzyFlow {
+func NewFuzzyFlow(basePath string, db db.Database) *FuzzyFlow {
 	return &FuzzyFlow{
 		basePath: basePath,
 		db: db,
@@ -23,11 +22,11 @@ func NewFuzzyFlow(basePath string, db database.Database) *FuzzyFlow {
 
 func (fuzzy *FuzzyFlow) FindMatch() string {
 	// Check in DB + fuzzy + levinshtein
-	pathFormatter := utils.NewPathFormatter()
+	pathFormatter := record.NewPathFormatter()
 
 	records := fuzzy.FetchRecords()
 
-	foundRecords, err := stringmatcher.FuzzyFind(fuzzy.basePath, records) //fuzzy + levinshtein getting a PathDistRecord struct
+	foundRecords, err := matcher.FuzzyFind(fuzzy.basePath, records) //fuzzy + levinshtein getting a PathDistRecord struct
 	if err != nil {
 		return ""
 	}
@@ -56,7 +55,6 @@ func (fuzzy *FuzzyFlow) FindMatch() string {
 		_ = fuzzy.db.UpdateScore(rec)
 		return rec.GetPath()
 	}
-	return "hh"
 }
 
 func (fuzzy *FuzzyFlow) filterByScore(records []*record.PathRecord) (*record.PathRecord, error) {

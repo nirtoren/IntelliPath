@@ -6,9 +6,10 @@ package icd
 import (
 	"fmt"
 	"intellipath/internal/constants"
+	"intellipath/internal/env"
 	"intellipath/internal/flows"
-	"intellipath/internal/utils"
-	"intellipath/internal/database"
+	"intellipath/internal/record/db"
+
 	"os"
 	"strconv"
 
@@ -29,22 +30,23 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	userInput := args[0]
 
 	// Validate input
-	validator := utils.NewValidator()
-	validator.ValidateInputPath(userInput)
+	// validator := utils.NewValidator()
+	// validator.ValidateInputPath(userInput)
 
 	// Get GetENV<name>
-	validator.ValidateENVs()
+	envValidator := env.NewValidator()
+	envValidator.ValidateENVs()
 
 	// Get the db, DEPENDS ON ENV
-	db := database.GetDbInstance()
-	defer db.Close()
+	database := db.GetDbInstance()
+	defer database.Close()
 
 	// Parallel cleanup of un-touched paths
 	resultCh := make(chan error)
 	dtimer, _ := strconv.Atoi(constants.INTELLIPATH_DB_DTIMER)
-	go database.ParallelCleanUp(db, dtimer, resultCh)
+	go db.ParallelCleanUp(database, dtimer, resultCh)
 
-	flowManager := pathfinder.NewFlowManager(db)
+	flowManager := pathfinder.NewFlowManager(database)
 	outPath = flowManager.Manage(userInput)
 
 	err = <-resultCh

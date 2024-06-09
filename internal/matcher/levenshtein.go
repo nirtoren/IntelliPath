@@ -1,4 +1,4 @@
-package stringmatcher
+package matcher
 
 import (
 	"sort"

@@ -1,10 +1,9 @@
-package stringmatcher
+package matcher
 
 import (
 	"errors"
 	"intellipath/internal/record"
-	"intellipath/internal/utils"
-
+	
 	"github.com/lithammer/fuzzysearch/fuzzy"
 )
 
@@ -21,7 +20,7 @@ func FuzzyFind(path string, records []*record.PathRecord) ([]PathDist, error) {
 	dbPaths := convertor.RecordsToPaths(records)
 	
 	pathMap := make(map[string]string)
-	formatter := utils.NewPathFormatter()
+	formatter := record.NewPathFormatter()
 	for _, fullPath := range dbPaths {
 		base := formatter.ToBase(fullPath)
 		pathMap[base] = fullPath

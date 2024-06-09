@@ -1,11 +1,11 @@
-package database
+package db
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"intellipath/internal/env"
 	"intellipath/internal/record"
-	"intellipath/internal/utils"
 	"strings"
 	"sync"
 	"time"
@@ -33,11 +33,16 @@ var (
 	once       sync.Once
 )
 
-func GetDbInstance() *SQLDatabase {
+func GetDbInstance(args ...string) *SQLDatabase {
 	var dbFile string
-	validator := utils.NewValidator()
-	ENVGetter := utils.NewENVGetter(validator)
-	dbFile = ENVGetter.GetDBPath()
+
+	if len(args) == 1 {
+		dbFile = args[0]
+	} else {
+		validator := env.NewValidator()
+		ENVGetter := env.NewENVGetter(validator)
+		dbFile = ENVGetter.GetDBPath()
+	}
 
 	once.Do(func() {
 		var err error

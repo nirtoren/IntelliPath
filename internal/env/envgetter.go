@@ -1,6 +1,10 @@
-package utils
+package env
 
-import "intellipath/internal/constants"
+import (
+	"intellipath/internal/constants"
+	"os"
+	"path/filepath"
+)
 
 type ENVGetter struct {
 	validator *validator
@@ -20,14 +24,12 @@ func (env *ENVGetter) GetIntellipathDir() string {
 
 func (env *ENVGetter) GetDBPath() string {
 	var dbFile string
-	pathFormatter := NewPathFormatter()
 	dir, _ := env.validator.validateIntellipathDirENV()
-
 	dbFile = dir + constants.DBpath
 
-	DBabsolutePath := pathFormatter.ToAbs(dbFile)
-	isDBExists := pathFormatter.IsExists(DBabsolutePath)
-
+	DBabsolutePath, err := filepath.Abs(dbFile)
+	_, err = os.Stat(DBabsolutePath)
+	isDBExists := os.IsNotExist(err)
 	if !isDBExists {
 		panic("Could not find the database")
 	}

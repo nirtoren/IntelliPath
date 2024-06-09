@@ -1,16 +1,16 @@
 package pathfinder
 
 import (
-	"intellipath/internal/database"
 	"intellipath/internal/record"
+	"intellipath/internal/record/db"
 )
 
 type Direct struct {
 	absolutePath string
-	db database.Database
+	db db.Database
 }
 
-func NewDirectFlow(absolutePath string, db database.Database) *Direct {
+func NewDirectFlow(absolutePath string, db db.Database) *Direct {
 	return &Direct{
 		absolutePath: absolutePath,
 		db: db,

@@ -1,7 +1,6 @@
-package internal_test
+package db
 
 import (
-	"intellipath/internal/record"
 	"log"
 	"os"
 	"testing"
@@ -68,7 +67,7 @@ func TestGetDbInstance(t *testing.T) {
 		mockFormatter.On("ToAbs", dbFile).Return(dbFile)
 		mockFormatter.On("IsExists", dbFile).Return(true)
 
-		db := record.GetDbInstance(dbFile)
+		db := GetDbInstance(dbFile)
 		assert.NotNil(t, db)
 		// mockFormatter.AssertExpectations(t)
 	})
@@ -79,7 +78,7 @@ func TestGetDbInstance(t *testing.T) {
 		mockFormatter.On("IsExists", dbFile).Return(false)
 
 		assert.PanicsWithValue(t, "Could not find the database", func() {
-			record.GetDbInstance(dbFile)
+			GetDbInstance(dbFile)
 		})
 		// mockFormatter.AssertExpectations(t)
 	})
@@ -91,7 +90,7 @@ func TestDatabase_Initialize(t *testing.T) {
 	mockFormatter.On("ToAbs", "test.db").Return("test.db")
 	mockFormatter.On("IsExists", "test.db").Return(true)
 
-	db := record.GetDbInstance("test.db")
+	db := GetDbInstance("test.db")
 	defer db.Close()
 
 	err := db.Initizlize()
@@ -103,7 +102,7 @@ func TestDatabase_Close(t *testing.T) {
 	mockFormatter.On("ToAbs", "test.db").Return("test.db")
 	mockFormatter.On("IsExists", "test.db").Return(true)
 
-	db := record.GetDbInstance("test.db")
+	db := GetDbInstance("test.db")
 	err := db.Close()
 	assert.NoError(t, err)
 }

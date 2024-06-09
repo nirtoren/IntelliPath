@@ -1,34 +1,18 @@
 // Un-used for now 
 
-package utils
+package env
 
 import (
-	"fmt"
 	"os"
 	"errors"
 	"intellipath/internal/constants"
 
 )
 
-// type InputValidator interface{
-// 	ValidateInputPath(string) error
-// 	ValidateFlags(string) error
-// }
-
 type validator struct{}
 
 func NewValidator() *validator {
 	return &validator{}
-}
-
-func (validator *validator) ValidateInputPath(userInput string) error {
-	fmt.Println(userInput)
-	return nil
-}
-
-func (validator *validator) ValidateFlags(flag string) error {
-	fmt.Println(flag)
-	return nil
 }
 
 func (validator *validator) ValidateENVs() {
