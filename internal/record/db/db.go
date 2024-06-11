@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	// "intellipath/internal/constants"
 	"intellipath/internal/env"
 	"intellipath/internal/record"
 	"strings"
@@ -32,6 +33,26 @@ var (
 	dbInstance *SQLDatabase
 	once       sync.Once
 )
+
+func CreateDBOnce() *SQLDatabase {
+	validator := env.NewValidator()
+	validator.ValidateENVs()
+	envGetter := env.NewENVGetter(validator)
+	dbFile := envGetter.GetDBPath()
+
+	// dbFile := intellipathDir + constants.DBPATH
+
+	once.Do(func() {
+		var err error
+		db, err := sql.Open("sqlite3", dbFile)
+		if err != nil {
+			panic(err)
+		}
+		dbInstance = &SQLDatabase{db: db}
+	})
+
+	return dbInstance
+}
 
 func GetDbInstance(args ...string) *SQLDatabase {
 	var dbFile string

@@ -29,10 +29,6 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	var err error
 	userInput := args[0]
 
-	// Validate input
-	// validator := utils.NewValidator()
-	// validator.ValidateInputPath(userInput)
-
 	// Get GetENV<name>
 	envValidator := env.NewValidator()
 	envValidator.ValidateENVs()
