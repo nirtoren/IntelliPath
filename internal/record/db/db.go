@@ -63,7 +63,7 @@ func (d *SQLDatabase) Initizlize() error {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL UNIQUE,
 			score INTEGER,
-			last_touched DATETIME
+			last_touched DATETIME DEFAULT CURRENT_TIMESTAMP
 		)
 	`
 
@@ -74,19 +74,19 @@ func (d *SQLDatabase) Initizlize() error {
 
 	// trigger for updating 'last_touched' after INSERT
 	_, err = d.db.Exec(`
-		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_after_insert
 		AFTER INSERT ON paths
 		BEGIN
 			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
 		END;
 	`)
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger after insert: %v", err)
+		panic("could not initialize trigger after insert")
 	}
 
 	// trigger for updating 'last_touched' after UPDATE
 	_, err = d.db.Exec(`
-		CREATE TRIGGER IF NOT EXISTS update_last_touched_update
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_after_update
 		AFTER UPDATE ON paths
 		BEGIN
 			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
@@ -94,7 +94,7 @@ func (d *SQLDatabase) Initizlize() error {
 	`)
 
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger after update: %v", err)
+		panic("could not initialize trigger after update")
 	}
 
 	return nil
