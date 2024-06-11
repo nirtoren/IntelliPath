@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -105,4 +106,37 @@ func TestDatabase_Close(t *testing.T) {
 	db := GetDbInstance("test.db")
 	err := db.Close()
 	assert.NoError(t, err)
+}
+
+func TestDatabase_Triggers(t *testing.T) {
+	setup()
+	mockFormatter := new(MockPathFormatter)
+	mockFormatter.On("ToAbs", "test.db").Return("test.db")
+	mockFormatter.On("IsExists", "test.db").Return(true)
+
+	db := GetDbInstance("test.db")
+	defer db.Close()
+
+	err := db.Initizlize()
+	assert.NoError(t, err)
+
+	// Insert a record
+	_, err = db.db.Exec(`INSERT INTO paths (path, score) VALUES (?, ?)`, "test/path", 10)
+	assert.NoError(t, err)
+
+	// Fetch the record to check the 'last_touched' value
+	var lastTouchedAfterInsert time.Time
+	err = db.db.QueryRow(`SELECT last_touched FROM paths WHERE path = ?`, "test/path").Scan(&lastTouchedAfterInsert)
+	assert.NoError(t, err)
+    assert.WithinDuration(t, time.Now(), lastTouchedAfterInsert, time.Minute, "last_touched should be updated after insert")
+	
+	// Update the record
+	_, err = db.db.Exec(`UPDATE paths SET score = ? WHERE path = ?`, 20, "test/path")
+	assert.NoError(t, err)
+
+
+	// Fetch the record again to check the 'last_touched' value
+	err = db.db.QueryRow(`SELECT last_touched FROM paths WHERE path = ?`, "test/path").Scan(&lastTouchedAfterInsert)
+	assert.NoError(t, err)
+    assert.WithinDuration(t, time.Now(), lastTouchedAfterInsert, time.Minute, "last_touched should be updated after update")
 }

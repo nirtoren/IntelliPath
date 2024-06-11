@@ -81,12 +81,12 @@ func (d *SQLDatabase) Initizlize() error {
 		END;
 	`)
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger")
+		return fmt.Errorf("could not initialize trigger after insert: %v", err)
 	}
 
 	// trigger for updating 'last_touched' after UPDATE
 	_, err = d.db.Exec(`
-		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_update
 		AFTER UPDATE ON paths
 		BEGIN
 			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
@@ -94,7 +94,7 @@ func (d *SQLDatabase) Initizlize() error {
 	`)
 
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger")
+		return fmt.Errorf("could not initialize trigger after update: %v", err)
 	}
 
 	return nil

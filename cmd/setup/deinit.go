@@ -6,7 +6,7 @@ package setup
 import (
 	"fmt"
 	"intellipath/internal/constants"
-		"log"
+	"log"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -27,7 +27,7 @@ to quickly create a Cobra application.`,
 		var choice string
     	n, err := fmt.Scanln(&choice)
 		if n > 1 {
-			log.Fatal("Answer shoul dbe `y` or `n`")
+			log.Fatal("Answer should be `y` or `n`")
 		}
 		if err != nil {
 			log.Fatal(err)
