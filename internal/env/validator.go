@@ -15,16 +15,17 @@ func NewValidator() *validator {
 	return &validator{}
 }
 
-func (validator *validator) ValidateENVs() {
+func (validator *validator) ValidateENVs() error {
 	var err error
 	_, err = validator.validateIntellipathDirENV()
 	if err != nil {
-		panic(err)
+		return err
 	}
 	_, err = validator.validateIntellipathDTimerENV()
 	if err != nil {
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func (validator *validator) validateIntellipathDirENV() (string, error) {

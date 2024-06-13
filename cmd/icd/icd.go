@@ -34,7 +34,7 @@ func RunIcd(cmd *cobra.Command, args []string) {
 	envValidator.ValidateENVs()
 
 	// Get the db, DEPENDS ON ENV
-	database := db.GetDbInstance()
+	database, _ := db.GetDBInstance()
 	defer database.Close()
 
 	// Parallel cleanup of un-touched paths

@@ -4,83 +4,61 @@ import (
 	"os"
 	"testing"
 
-	"intellipath/internal/constants"
+	"github.com/stretchr/testify/assert"
 )
 
 
-func TestValidateENVs(t *testing.T) {
-	// Helper function to set and unset environment variables
-	setEnv := func(key, value string) {
-		err := os.Setenv(key, value)
-		if err != nil {
-			t.Fatalf("Failed to set environment variable %s: %v", key, err)
-		}
-	}
+func MockEnvironment() {
+	os.Setenv("_INTELLIPATH_DIR", "/mock/dir")
+	os.Setenv("_INTELLIPATH_DB_DTIMER", "5")
+}
 
-	unsetEnv := func(key string) {
-		err := os.Unsetenv(key)
-		if err != nil {
-			t.Fatalf("Failed to unset environment variable %s: %v", key, err)
-		}
-	}
+// RestoreEnvironment restores the original environment after testing.
+func RestoreEnvironment() {
+	os.Unsetenv("_INTELLIPATH_DIR")
+	os.Unsetenv("_INTELLIPATH_DB_DTIMER")
+}
 
-	// Test when both environment variables are set
-	t.Run("Both ENVs set", func(t *testing.T) {
-		setEnv(constants.INTELLIPATH_DIR, "/path/to/intellipath")
-		setEnv(constants.INTELLIPATH_DB_DTIMER, "7")
+func TestValidateENVs_Success(t *testing.T) {
+	// Arrange
+	MockEnvironment()
+	defer RestoreEnvironment()
 
-		defer unsetEnv(constants.INTELLIPATH_DIR)
-		defer unsetEnv(constants.INTELLIPATH_DB_DTIMER)
+	validator := NewValidator()
 
-		validator := NewValidator()
-		validator.ValidateENVs() // Should not panic
+	// Act
+	err := validator.ValidateENVs()
 
-		// If the function returns without panicking, the test is successful
-	})
+	// Assert
+	assert.NoError(t, err, "ValidateENVs should succeed with mock environment variables")
+}
 
-	// Test when INTELLIPATH_DIR is not set
-	t.Run("INTELLIPATH_DIR not set", func(t *testing.T) {
-		unsetEnv(constants.INTELLIPATH_DIR)
-		setEnv(constants.INTELLIPATH_DB_DTIMER, "7")
+func TestValidateENVs_MissingIntellipathDir(t *testing.T) {
+	// Arrange
+	os.Unsetenv("_INTELLIPATH_DIR")
 
-		defer unsetEnv(constants.INTELLIPATH_DB_DTIMER)
+	validator := NewValidator()
 
-		validator := NewValidator()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic when INTELLIPATH_DIR was not set")
-			}
-		}()
-		validator.ValidateENVs() // Should panic
-	})
+	// Act
+	err := validator.ValidateENVs()
 
-	// Test when INTELLIPATH_DB_DTIMER is not set
-	t.Run("INTELLIPATH_DB_DTIMER not set", func(t *testing.T) {
-		setEnv(constants.INTELLIPATH_DIR, "/path/to/intellipath")
-		unsetEnv(constants.INTELLIPATH_DB_DTIMER)
+	// Assert
+	assert.Error(t, err, "_INTELLIPATH_DIR not found error should be returned")
+	assert.EqualError(t, err, "_INTELLIPATH_DIR not found within environmental variables")
+}
 
-		defer unsetEnv(constants.INTELLIPATH_DIR)
+func TestValidateENVs_MissingIntellipathDTimer(t *testing.T) {
+	// Arrange
+	MockEnvironment()
+	defer RestoreEnvironment()
+	os.Unsetenv("_INTELLIPATH_DB_DTIMER")
 
-		validator := NewValidator()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic when INTELLIPATH_DB_DTIMER was not set")
-			}
-		}()
-		validator.ValidateENVs() // Should panic
-	})
+	validator := NewValidator()
 
-	// Test when both environment variables are not set
-	t.Run("Both ENVs not set", func(t *testing.T) {
-		unsetEnv(constants.INTELLIPATH_DIR)
-		unsetEnv(constants.INTELLIPATH_DB_DTIMER)
+	// Act
+	err := validator.ValidateENVs()
 
-		validator := NewValidator()
-		defer func() {
-			if r := recover(); r == nil {
-				t.Errorf("The code did not panic when both environment variables were not set")
-			}
-		}()
-		validator.ValidateENVs() // Should panic
-	})
+	// Assert
+	assert.Error(t, err, "_INTELLIPATH_DB_DTIMER not found error should be returned")
+	assert.EqualError(t, err, "_INTELLIPATH_DB_DTIMER not found within environmental variables")
 }

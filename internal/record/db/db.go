@@ -4,13 +4,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	// "intellipath/internal/constants"
+
 	"intellipath/internal/env"
 	"intellipath/internal/record"
 	"strings"
 	"sync"
 	"time"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -34,47 +33,59 @@ var (
 	once       sync.Once
 )
 
-func CreateDBOnce() *SQLDatabase {
-	validator := env.NewValidator()
-	validator.ValidateENVs()
-	envGetter := env.NewENVGetter(validator)
-	dbFile := envGetter.GetDBPath()
+// func CreateDBOnce() *SQLDatabase {
+// 	validator := env.NewValidator()
+// 	validator.ValidateENVs()
+// 	envGetter := env.NewENVGetter(validator)
+// 	dbFile := envGetter.GetDBPath()
 
-	// dbFile := intellipathDir + constants.DBPATH
+// 	// dbFile := intellipathDir + constants.DBPATH
 
-	once.Do(func() {
-		var err error
-		db, err := sql.Open("sqlite3", dbFile)
-		if err != nil {
-			panic(err)
-		}
-		dbInstance = &SQLDatabase{db: db}
-	})
+// 	once.Do(func() {
+// 		var err error
+// 		db, err := sql.Open("sqlite3", dbFile)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		dbInstance = &SQLDatabase{db: db}
+// 	})
 
-	return dbInstance
-}
+// 	return dbInstance
+// }
 
-func GetDbInstance(args ...string) *SQLDatabase {
+func GetDBInstance(dbPath ...string) (*SQLDatabase, error) {
 	var dbFile string
+	var err error
 
-	if len(args) == 1 {
-		dbFile = args[0]
+	if len(dbPath) == 1 {
+		dbFile = dbPath[0]
 	} else {
 		validator := env.NewValidator()
-		ENVGetter := env.NewENVGetter(validator)
-		dbFile = ENVGetter.GetDBPath()
+		if err = validator.ValidateENVs(); err != nil {
+			return nil, err
+		}
+		envGetter := env.NewENVGetter(validator)
+		dbFile, err = envGetter.GetDBPath()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	once.Do(func() {
 		var err error
 		db, err := sql.Open("sqlite3", dbFile)
 		if err != nil {
-			panic(err)
+			dbInstance = nil
+			return
 		}
 		dbInstance = &SQLDatabase{db: db}
 	})
 
-	return dbInstance
+	if dbInstance == nil {
+		return nil, errors.New("failed to initialize database instance")
+	}
+
+	return dbInstance, nil
 }
 
 

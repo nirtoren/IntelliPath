@@ -2,6 +2,7 @@ package env
 
 import (
 	"intellipath/internal/constants"
+	"path/filepath"
 	// "os"
 	// "path/filepath"
 )
@@ -14,18 +15,19 @@ func NewENVGetter(validator *validator) *ENVGetter {
 	return &ENVGetter{validator: validator}
 }
 
-func (env *ENVGetter) GetIntellipathDir() string {
+func (env *ENVGetter) GetIntellipathDir() (string, error) {
 	dir, err := env.validator.validateIntellipathDirENV()
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return dir
+	return dir, nil
 }
 
-func (env *ENVGetter) GetDBPath() string {
-	var dbFile string
-	dir, _ := env.validator.validateIntellipathDirENV()
-	dbFile = dir + constants.DBLOCATION
+func (env *ENVGetter) GetDBPath() (string, error) {
+	dir, err := env.validator.validateIntellipathDirENV()
+	if err != nil {
+		return "", err
+	}
 
-	return dbFile
+	return filepath.Join(dir, constants.DBLOCATION), nil
 }

@@ -26,15 +26,15 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("Initializing Intellipath...")
 
-		database := db.CreateDBOnce()
-		errr := database.Initizlize()
-		if errr != nil {
-			fmt.Printf("Error on initialization to database: %v\n", errr)
+		database, err := db.GetDBInstance()
+		err = database.Initizlize()
+		if err != nil {
+			fmt.Printf("Error on initialization to database: %v\n", err)
 			os.Exit(1)
 		}
 
 		rec, _ := record.NewRecord("~/", 0)
-		_, err := database.InsertRecord(rec)
+		_, err = database.InsertRecord(rec)
 		if err != nil {
 			fmt.Printf("Error on insertion to database: %v\n", err)
 			os.Exit(1)
