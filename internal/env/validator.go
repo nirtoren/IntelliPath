@@ -28,10 +28,10 @@ func (validator *validator) ValidateENVs() {
 }
 
 func (validator *validator) validateIntellipathDirENV() (string, error) {
-	dir := os.Getenv(constants.INTELLIPATH_DIR)
-	// if !exists{
-	// 	return "", errors.New("_INTELLIPATH_DIR not found within environmental variables")
-	// }
+	dir, exists := os.LookupEnv(constants.INTELLIPATH_DIR)
+	if !exists{
+		return "", errors.New("_INTELLIPATH_DIR not found within environmental variables")
+	}
 
 	return dir, nil
 }

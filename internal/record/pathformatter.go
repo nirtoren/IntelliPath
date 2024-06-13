@@ -5,12 +5,6 @@ import (
 	"path/filepath"
 )
 
-// type Formatter interface {
-// 	ToBase(string) string
-// 	ToAbs(string) string
-// 	IsExists(string) bool
-// }
-
 type PathFormatter struct{}
 
 
