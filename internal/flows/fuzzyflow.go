@@ -64,7 +64,7 @@ func (fuzzy *FuzzyFlow) filterByScore(records []*record.PathRecord) (*record.Pat
 	} else if len(records) == 1 {
 		return records[0], nil
 	} else {
-		if records[0].GetScore() > records[1].GetScore() {
+		if records[0].GetScore() > records[1].GetScore() || records[0].GetPath() == records[1].GetPath() {
 			return records[0], nil
 		} else {
 			return records[1], nil

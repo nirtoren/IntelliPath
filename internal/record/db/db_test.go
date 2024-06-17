@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -13,16 +14,17 @@ import (
 
 func setup() (*SQLDatabase,error) {
 	// Create a new database file for testing
-	dbPath := "/home/nirt/Desktop/IntelliPath/internal/testsdata/test.db"
+	dbPath := "../../testsdata/test.db"
 
 	// Remove existing database file if it exists
-	if _, err := os.Stat(dbPath); err == nil {
-		os.Remove(dbPath)
+	abs,_ := filepath.Abs(dbPath)
+	if _, err := os.Stat(abs); err == nil {
+		os.Remove(abs)
 	}
 
-	os.Create(dbPath)
+	os.Create(abs)
 	// Initialize database and perform necessary setup
-	DB, err := GetDBInstance(dbPath)
+	DB, err := GetDBInstance(abs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get DB instance: %v", err)
 	}
@@ -37,8 +39,10 @@ func setup() (*SQLDatabase,error) {
 
 func teardown() {
 	// Remove database file after test completes
-	dbPath := "/home/nirt/Desktop/IntelliPath/internal/testsdata/test.db"
-	os.Remove(dbPath)
+	dbPath := "../../testsdata/test.db"
+	abs,_ := filepath.Abs(dbPath)
+
+	os.Remove(abs)
 }
 
 func TestInitialize(t *testing.T) {
