@@ -1,79 +1,84 @@
-package flow
+package pathfinder
 
 import (
 	"errors"
-	algo "intellipath/internal/algorithms"
-	"intellipath/internal/db"
-	"intellipath/internal/interfaces"
+	"intellipath/internal/record"
+	"intellipath/internal/record/db"
+	"intellipath/internal/matcher"
+
 )
 
 type FuzzyFlow struct {
-	pathsdb  *db.Database
 	basePath string
+	db db.Database
 }
 
-func InitFuzzyFlow(pathDB *db.Database, basePath string) *FuzzyFlow {
-	if pathDB == nil {
-		panic("could not initialize Heavy flow due to DB issue")
-	}
-
+func NewFuzzyFlow(basePath string, db db.Database) *FuzzyFlow {
 	return &FuzzyFlow{
-		pathsdb:  pathDB,
 		basePath: basePath,
+		db: db,
 	}
 }
 
-func (h *FuzzyFlow) Act() (string, error) {
+func (fuzzy *FuzzyFlow) FindMatch() string {
 	// Check in DB + fuzzy + levinshtein
-	pathFormatter := interfaces.NewPathFormatter()
+	pathFormatter := record.NewPathFormatter()
 
-	paths, err := h.pathsdb.GetAllPaths()
-	if err != nil {
-		return "", errors.New("could not get paths from DB")
-	}
+	records := fuzzy.FetchRecords()
 
-	fuzzyResPaths, err := algo.FuzzyFind(h.basePath, paths) //fuzzy + levinshtein getting a PathDistRecord struct
+	foundRecords, err := matcher.FuzzyFind(fuzzy.basePath, records) //fuzzy + levinshtein getting a PathDistRecord struct
 	if err != nil {
-		return "", errors.New("could not get paths from DB")
+		return ""
 	}
 
 	var fuzzyPaths []string
-	for _, pathRes := range fuzzyResPaths {
+	for _, pathRes := range foundRecords {
 		fuzzyPaths = append(fuzzyPaths, pathRes.Path)
 	}
 
-	records, err := h.pathsdb.GetRecordsByName(fuzzyPaths)
+	records, err = fuzzy.db.GetRecordsByName(fuzzyPaths)
 	if err != nil {
-		return "", errors.New("could not get paths from DB")
+		return ""
 	}
 
 	// filter by score function
-	outPath, score, err := h.filterByScore(records)
+	rec, err := fuzzy.filterByScore(records)
 	if err != nil {
-		return "", errors.New("failed to filter records by score")
+		return ""
 	}
 
 	// Check if found path exists
-	if !pathFormatter.IsExists(outPath) {
-		h.pathsdb.DeletePath(outPath)
+	if !pathFormatter.IsExists(rec.GetPath()) {
+		fuzzy.db.DeletePath(rec)
 		panic("Path does not exists")
 	} else {
-		_ = h.pathsdb.UpdateScore(outPath, score)
-		return outPath, nil
+		_ = fuzzy.db.UpdateScore(rec)
+		return rec.GetPath()
 	}
 }
 
-func (h *FuzzyFlow) filterByScore(records []interfaces.PathRecord) (string, int, error) {
+func (fuzzy *FuzzyFlow) filterByScore(records []*record.PathRecord) (*record.PathRecord, error) {
 
 	if len(records) < 1 {
-		return "", 0, errors.New("could not find any paths")
+		return nil, errors.New("could not find any paths")
 	} else if len(records) == 1 {
-		return records[0].GetPath(), records[0].GetScore(), nil
+		return records[0], nil
 	} else {
-		if records[0].GetScore() > records[1].GetScore() {
-			return records[0].GetPath(), records[0].GetScore(), nil
+		if records[0].GetScore() > records[1].GetScore() || records[0].GetPath() == records[1].GetPath() {
+			return records[0], nil
 		} else {
-			return records[1].GetPath(), records[0].GetScore(), nil
+			return records[1], nil
 		}
 	}
 }
+
+func  (fuzzy *FuzzyFlow) FetchRecords() []*record.PathRecord {
+	records, err := fuzzy.db.GetAllRecords();
+	if err != nil {
+		panic(err)
+	}
+
+	return records
+}
+
+func  (fuzzy *FuzzyFlow) SaveRecord() {}
