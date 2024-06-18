@@ -9,6 +9,7 @@ BINARY := intellipath
 # Compressed archive name
 TARFILE := build/intellipath.tar.gz
 
+
 # Default target
 .PHONY: all
 all: build
