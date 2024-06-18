@@ -10,8 +10,9 @@
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/main.go",
-            "args": ["init"],
-            "env": {},
+            "args": ["icd", "tes"],
+            "env": {"_INTELLIPATH_DB_DTIMER": "5",
+        "_INTELLIPATH_DIR": "/usr/local/bin"},
             "showLog": true
         }
 

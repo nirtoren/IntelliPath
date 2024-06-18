@@ -1,17 +1,12 @@
-package utils
+package record
 
 import (
 	"os"
 	"path/filepath"
 )
 
-type Formatter interface {
-	ToBase(string) string
-	ToAbs(string) string
-	IsExists(string) bool
-}
+type PathFormatter struct{}
 
-type PathFormatter struct {}
 
 func NewPathFormatter() *PathFormatter {
 	return &PathFormatter{}

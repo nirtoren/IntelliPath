@@ -1,8 +1,9 @@
 package constants
 
 const (
-	INTELLIPATH = "/intellipath"
-	DBpath = INTELLIPATH + "/ipaths.db"
-	INTELLIPATH_DIR = "_INTELLIPATH_DIR"
-	INTELLIPATH_DB_DTIMER = "_INTELLIPATH_DB_DTIMER"
+	INTELLIPATH           string = "/intellipath"
+	DBLOCATION            string = INTELLIPATH + "/ipaths.db"
+	INTELLIPATH_DIR       string = "_INTELLIPATH_DIR"
+	DBPATH                string = INTELLIPATH_DIR + DBLOCATION
+	INTELLIPATH_DB_DTIMER string = "_INTELLIPATH_DB_DTIMER"
 )

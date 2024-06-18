@@ -1,52 +1,58 @@
-package flow
+package pathfinder
 
 import (
 	"intellipath/internal/record"
+	"intellipath/internal/record/db"
 )
 
 type Direct struct {
-	pathsdb      *record.Database
 	absolutePath string
+	db db.Database
 }
 
-func InitDirectFlow(pathDB *record.Database, absolutePath string) *Direct {
-	if pathDB == nil {
-		panic("could not initialize Light flow due to DB issue")
-	}
-
+func NewDirectFlow(absolutePath string, db db.Database) *Direct {
 	return &Direct{
-		pathsdb:      pathDB,
 		absolutePath: absolutePath,
+		db: db,
 	}
 }
 
-func (light *Direct) Act() (string, error) { // This should later on return a record
+func (direct *Direct) FindMatch() string { // This should later on return a record
 	var outPath string
 
-	rec, err := light.pathsdb.PathSearch(light.absolutePath) // This should return a record if it exists
+	rec, err := direct.db.PathSearch(direct.absolutePath) // This should return a record if it exists
 	if err != nil {
-		return "", err
+		return ""
 	}
 
 	switch rec.GetPath() {
 	case "": // In case no record was found
-		record, err := record.NewRecord(light.absolutePath, 0)
+		record, err := record.NewRecord(direct.absolutePath, 0)
 		if err != nil {
-			return "", err
+			return ""
 		}
 
-		if _, err = light.pathsdb.InsertRecord(record); err != nil {
-			return "", err
-		}
-		outPath = light.absolutePath
+		direct.SaveRecord(record)
+		outPath = direct.absolutePath
 
-	case light.absolutePath: // In case a matching record was found
-		if err := light.pathsdb.UpdateScore(rec); err != nil {
-			return "", err
-		}
-		outPath = light.absolutePath
+	case direct.absolutePath: // In case a matching record was found
+		direct.UpdateRecord(rec)
+		outPath = direct.absolutePath
 
 	}
 
-	return outPath, nil
+	return outPath
+}
+
+func (direct *Direct) SaveRecord(record *record.PathRecord) {
+	_, err := direct.db.InsertRecord(record)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (direct *Direct) UpdateRecord(record *record.PathRecord) {
+	if err := direct.db.UpdateScore(record); err != nil {
+		panic(err)
+	}
 }

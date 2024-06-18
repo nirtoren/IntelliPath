@@ -6,9 +6,10 @@ package icd
 import (
 	"fmt"
 	"intellipath/internal/constants"
-	flow "intellipath/internal/flows"
-	"intellipath/internal/record"
-	"intellipath/internal/utils"
+	"intellipath/internal/env"
+	"intellipath/internal/flows"
+	"intellipath/internal/record/db"
+
 	"os"
 	"strconv"
 
@@ -26,38 +27,23 @@ var IcdCmd = &cobra.Command{
 func RunIcd(cmd *cobra.Command, args []string) {
 	var outPath string
 	var err error
+	userInput := args[0]
 
-	pathFormatter := utils.NewPathFormatter()
-	validator := utils.NewValidator()
-	validator.ValidateENV()
-	
-	userPath := args[0]
+	// Get GetENV<name>
+	envValidator := env.NewValidator()
+	envValidator.ValidateENVs()
 
-	// Get the db
-	value := os.Getenv(constants.INTELLIPATH_DIR)
-	
-	database := record.GetDbInstance(value+constants.DBpath)
-	// ADD ERROR IN CASE DATABASE NOT FOUND
-
+	// Get the db, DEPENDS ON ENV
+	database, _ := db.GetDBInstance()
 	defer database.Close()
 
 	// Parallel cleanup of un-touched paths
 	resultCh := make(chan error)
 	dtimer, _ := strconv.Atoi(constants.INTELLIPATH_DB_DTIMER)
-	go record.ParallelCleanUp(database, dtimer, resultCh)
+	go db.ParallelCleanUp(database, dtimer, resultCh)
 
-
-	// Check if users input actually path exists
-	absolutePath := pathFormatter.ToAbs(userPath)
-	isPathExists := pathFormatter.IsExists(absolutePath)
-
-	if isPathExists {
-		directFlow := flow.InitDirectFlow(database, absolutePath)
-		outPath, err = directFlow.Act()
-	} else {
-		fuzzyFlow := flow.InitFuzzyFlow(database, pathFormatter.ToBase(userPath))
-		outPath, err = fuzzyFlow.Act()
-	}
+	flowManager := pathfinder.NewFlowManager(database)
+	outPath = flowManager.Manage(userInput)
 
 	err = <-resultCh
 	if err != nil {

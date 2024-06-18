@@ -1,122 +1,124 @@
-package record
+package db
 
 import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"intellipath/internal/utils"
+
+	"intellipath/internal/env"
+	"intellipath/internal/record"
 	"strings"
 	"sync"
 	"time"
-
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Database struct {
-	db	*sql.DB
+type Database interface {
+	Close() error
+	DeletePath(pathRec *record.PathRecord) error
+	GetAllRecords() ([]*record.PathRecord, error)
+	GetRecordsByName(optionalPaths []string) ([]*record.PathRecord, error)
+	Initizlize() error
+	InsertRecord(pathRec *record.PathRecord) (int64, error)
+	PathSearch(pathToSearch string) (*record.PathRecord, error)
+	UpdateScore(pathRec *record.PathRecord) error
+}
+
+type SQLDatabase struct {
+	db *sql.DB
 }
 
 var (
-	dbInstance *Database
-	once sync.Once
+	dbInstance *SQLDatabase
+	once       sync.Once
 )
 
-func GetDbInstance(dbFile string) *Database {
-	pathFormatter := utils.NewPathFormatter()
+// func CreateDBOnce() *SQLDatabase {
+// 	validator := env.NewValidator()
+// 	validator.ValidateENVs()
+// 	envGetter := env.NewENVGetter(validator)
+// 	dbFile := envGetter.GetDBPath()
 
-	DBabsolutePath := pathFormatter.ToAbs(dbFile)
-	isDBExists := pathFormatter.IsExists(DBabsolutePath)
+// 	// dbFile := intellipathDir + constants.DBPATH
 
-	if !isDBExists {
-		panic("Could not find the database")
+// 	once.Do(func() {
+// 		var err error
+// 		db, err := sql.Open("sqlite3", dbFile)
+// 		if err != nil {
+// 			panic(err)
+// 		}
+// 		dbInstance = &SQLDatabase{db: db}
+// 	})
+
+// 	return dbInstance
+// }
+
+func GetDBInstance(dbPath ...string) (*SQLDatabase, error) {
+	var dbFile string
+	var err error
+
+	if len(dbPath) == 1 {
+		dbFile = dbPath[0]
+	} else {
+		validator := env.NewValidator()
+		if err = validator.ValidateENVs(); err != nil {
+			return nil, err
+		}
+		envGetter := env.NewENVGetter(validator)
+		dbFile, err = envGetter.GetDBPath()
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	once.Do(func() {
 		var err error
 		db, err := sql.Open("sqlite3", dbFile)
 		if err != nil {
-			panic(err)
+			dbInstance = nil
+			return
 		}
-		dbInstance = &Database{db: db}
+		dbInstance = &SQLDatabase{db: db}
 	})
 
-	return dbInstance
+	if dbInstance == nil {
+		return nil, errors.New("failed to initialize database instance")
+	}
+
+	return dbInstance, nil
 }
 
 
-// func NewDatabase(dbFile string) (*Database, error) {
-// 	_, err := os.Stat(dbFile)
-// 	databaseExists := !os.IsNotExist(err)
-
-// 	if databaseExists {
-// 		fmt.Println("Seems like you aleadt have a database, try to remove it and re-run.")
-// 		os.Exit(1)
-// 	}
-
-// 	db, err := sql.Open("sqlite3", dbFile)
-
-// 	if err != nil {
-// 		return nil, errors.New("an error occurred while creating the database")
-// 	}
-
-// 	return &Database{
-// 		db:	db,
-// 	}, nil
-// }
-
-
-// func GetDatabase(dbFile string) (*Database, error) {
-// 	if info, err := os.Stat(dbFile); os.IsNotExist(err) {
-// 		fmt.Println("A database was not inititalized. Run 'intellipath init'")
-// 		fmt.Println(info)
-// 		os.Exit(1)
-// 		return &Database{
-// 			db:	nil,
-// 		}, errors.New("A database was not inititalized. Run 'intellipath init'")
-// 	} else {
-// 		db, err := sql.Open("sqlite3", dbFile)
-// 		if err != nil {
-// 			fmt.Println("Error: Could not get a database.")
-// 			os.Exit(1)
-// 		}
-
-// 		return &Database{
-// 			db:	db,
-// 		}, nil
-// 	}
-// }
-
-func (d *Database) Initizlize() error {
+func (d *SQLDatabase) Initizlize() error {
 	createSchemaSQL := `
 		CREATE TABLE IF NOT EXISTS paths (
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			path TEXT NOT NULL UNIQUE,
 			score INTEGER,
-			last_touched DATETIME
+			last_touched DATETIME DEFAULT CURRENT_TIMESTAMP
 		)
 	`
-	
+
 	_, err := d.db.Exec(createSchemaSQL)
 	if err != nil {
 		return fmt.Errorf("error creating table: %v", err)
 	}
 
-
 	// trigger for updating 'last_touched' after INSERT
 	_, err = d.db.Exec(`
-		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_after_insert
 		AFTER INSERT ON paths
 		BEGIN
 			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
 		END;
 	`)
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger")
+		panic("could not initialize trigger after insert")
 	}
 
 	// trigger for updating 'last_touched' after UPDATE
 	_, err = d.db.Exec(`
-		CREATE TRIGGER IF NOT EXISTS update_last_touched_insert
+		CREATE TRIGGER IF NOT EXISTS update_last_touched_after_update
 		AFTER UPDATE ON paths
 		BEGIN
 			UPDATE paths SET last_touched = CURRENT_TIMESTAMP WHERE id = NEW.id;
@@ -124,14 +126,13 @@ func (d *Database) Initizlize() error {
 	`)
 
 	if err != nil {
-		return fmt.Errorf("could not initialize trigger")
+		panic("could not initialize trigger after update")
 	}
-
 
 	return nil
 }
 
-func (d *Database) Close() error {
+func (d *SQLDatabase) Close() error {
 	if d.db != nil {
 		return d.db.Close()
 	}
@@ -139,14 +140,14 @@ func (d *Database) Close() error {
 	return nil
 }
 
-func ParallelCleanUp(d *Database, dtimer int, resultCh chan<-error){
+func ParallelCleanUp(d *SQLDatabase, dtimer int, resultCh chan<- error) {
 	cutOffTime := time.Now().Add(-5 * 24 * time.Hour)
 
 	_, err := d.db.Exec("DELETE FROM paths WHERE last_touched < ?", cutOffTime)
 	resultCh <- err
 }
 
-func (d *Database) InsertRecord(pathRec *PathRecord) (int64, error) {
+func (d *SQLDatabase) InsertRecord(pathRec *record.PathRecord) (int64, error) {
 
 	insertPathSQL := `
 		INSERT INTO paths (path, score) VALUES (?, ?)
@@ -166,12 +167,12 @@ func (d *Database) InsertRecord(pathRec *PathRecord) (int64, error) {
 	return userID, nil
 }
 
-func (d *Database) GetAllPaths() ([]string, error) {
+func (d *SQLDatabase) GetAllRecords() ([]*record.PathRecord, error) {
 
-	var paths []string
+	var records []*record.PathRecord
 
 	getAllPathsSQL := `
-		SELECT path FROM paths
+		SELECT path, score FROM paths
 	`
 	rows, err := d.db.Query(getAllPathsSQL)
 	if err != nil {
@@ -181,20 +182,22 @@ func (d *Database) GetAllPaths() ([]string, error) {
 
 	for rows.Next() {
 		var path string
-		if err := rows.Scan(&path); err != nil {
+		var score int
+		if err := rows.Scan(&path, &score); err != nil {
 			return nil, fmt.Errorf("error scanning row %v", err)
 		}
-		paths = append(paths, path)
+		record, _ := record.NewRecord(path, score)
+		records = append(records, record)
 
 	}
 
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("error iterating over rows: %v", err)
 	}
-	return paths, nil
+	return records, nil
 }
 
-func (d *Database) PathSearch(pathToSearch string) (*PathRecord, error) {
+func (d *SQLDatabase) PathSearch(pathToSearch string) (*record.PathRecord, error) {
 
 	var path string = ""
 	var score int = 0
@@ -214,12 +217,12 @@ func (d *Database) PathSearch(pathToSearch string) (*PathRecord, error) {
 		}
 	}
 
-	newRec,_ := NewRecord(path, score)
+	newRec, _ := record.NewRecord(path, score)
 
 	return newRec, err
 }
 
-func (d *Database) UpdateScore(pathRec *PathRecord) error {
+func (d *SQLDatabase) UpdateScore(pathRec *record.PathRecord) error {
 
 	updateScoresSQL := `UPDATE paths SET score = ? WHERE path = ?`
 	newScore := pathRec.GetScore() + 1
@@ -230,7 +233,7 @@ func (d *Database) UpdateScore(pathRec *PathRecord) error {
 	return nil
 }
 
-func (d *Database) DeletePath(pathRec *PathRecord) error {
+func (d *SQLDatabase) DeletePath(pathRec *record.PathRecord) error {
 
 	deleteRecordSQL := `DELETE from paths WHERE path = ?`
 	_, err := d.db.Exec(deleteRecordSQL, pathRec.GetPath())
@@ -240,7 +243,7 @@ func (d *Database) DeletePath(pathRec *PathRecord) error {
 	return nil
 }
 
-func (d *Database) GetRecordsByName(optionalPaths []string) ([]*PathRecord, error) {
+func (d *SQLDatabase) GetRecordsByName(optionalPaths []string) ([]*record.PathRecord, error) {
 	selectQuery := "SELECT path, score FROM paths WHERE path IN (" + strings.Join((strings.Split(strings.Repeat("?", len(optionalPaths)), "")), ", ") + ")"
 
 	args := make([]interface{}, len(optionalPaths))
@@ -255,7 +258,7 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]*PathRecord, erro
 
 	defer rows.Close()
 
-	var records []*PathRecord
+	var records []*record.PathRecord
 
 	for rows.Next() {
 		// var id int
@@ -270,7 +273,7 @@ func (d *Database) GetRecordsByName(optionalPaths []string) ([]*PathRecord, erro
 			return nil, err
 		}
 
-		new_rec, _ := NewRecord(path, score)
+		new_rec, _ := record.NewRecord(path, score)
 		records = append(records, new_rec)
 	}
 	return records, nil
